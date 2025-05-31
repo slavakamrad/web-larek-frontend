@@ -158,11 +158,11 @@ interface IForm {
   submit: HTMLButtonElement; // сохранние формы
   errors: HTMLElement;       // вывод ошибок формы
   onInputChange(): void;     // мониторинг изменений поля ввода
-  render(state: IFormState): HTMLElement; //
+  render(state: IFormState): HTMLElement; // отображение формы
 } 
 interface IFormState {
-  valid: boolean;    //
-  errors: string[];  //
+  valid: boolean;    // валидна ли форма
+  errors: string[];  // ошибка, если форма не валидна
 }
 interface ICatalogModel {
   items: IProduct[]; // Array всех товаров
