@@ -1,4 +1,4 @@
-import { IOrder, IProduct } from "./data";
+import { IOrder, IProduct, PaymentMethod } from "./data";
 import { FormErrors } from "./views";
 
 // Интерфейс модели каталога товаров 
@@ -19,6 +19,12 @@ export interface IBasketModel {
 
 // Интерфейс модели заказа
 export interface IOrderModel {
+  payment: PaymentMethod;       // текущий способ оплаты
+  address: string;             // адрес доставки
+  email: string;               // email пользователя
+  phone: string;               // телефон пользователя
+  items: string[];             // массив ID товаров в заказе
+  total: number;               // итоговая сумма заказа
   updateField<K extends keyof IOrder>(field: K, value: IOrder[K]): void;
   validate(): { isValid: boolean; errors: FormErrors };
   getOrderData(): IOrder;

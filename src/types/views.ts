@@ -1,26 +1,61 @@
-import { IOrder, IProduct } from './data';
+import { IOrder, IProduct, PaymentMethod } from './data';
 
 // Интерфейс Базовое представление
-export interface IView {
-  render(data?: object): HTMLElement;
+export interface IView<T = unknown> {
+  render(data?: T): HTMLElement;
 }
 
-// Интерфейс модального окна
-export interface IPopup {
+// Интерфейс каталога товаров
+export interface ICatalogView extends IView<IProduct[]> {
+  itemClick(handler: (product: IProduct) => void): void;
+  setLoading(loading: boolean): void;
+}
+
+// Интерфейс модального окна, один на всех и все на одного =)
+export interface IPopup extends IView {
   content: HTMLElement;
   closeButton: HTMLButtonElement;
   open(): void;
   close(): void;
   handleESC(evt: KeyboardEvent): void;
-  render(data: IPopup): boolean;
 }
 
-// Интерфейс формы
-export interface IForm {
-  submit: HTMLButtonElement;
+// Интерфейс попапа превью товара
+export interface IProductPreview extends IPopup {
+  addToCart(handler: () => void): void;
+}
+
+// Интерфейс попапа корзины
+export interface IBasketView extends IPopup {
+  update(items: Map<string, { product: IProduct, count: number }>): void;
+  deleteItem(handler: (id: string) => void): void;
+  bindCheckout(handler: () => void): void;
+}
+
+// Интерфейс формы заказа (шаг 1 - оплата/адрес)
+export interface IOrderFormView extends IPopup {
+  method: PaymentMethod;
+  address: string;
+  submitButton: HTMLButtonElement;
   errors: HTMLElement;
-  onInputChange(): void;
   render(state: IFormState): HTMLElement;
+  onSubmit(callback: () => void): void;
+}
+
+// Интерфейс формы контактов (шаг 2 - email/телефон)
+export interface IContactsFormView extends IPopup {
+  email: string;
+  phone: string;
+  submitButton: HTMLButtonElement;
+  errors: HTMLElement;
+  render(state: IFormState): HTMLElement;
+  onSubmit(callback: () => void): void;
+}
+
+// Попап успешного заказа
+export interface ISuccessView extends IPopup {
+  total: number;
+  setTotal(total: number): void;
 }
 
 // Интерфейс состояния формы
@@ -29,12 +64,5 @@ export interface IFormState {
   errors: string[];
 }
 
-// Интерфейс корзины товаров (View) 
-export interface IBasketView {
-  render(): void;
-  update(items: Map<string, number>): void;
-  clear(): void;
-}
-
-// Типизация ошибок в форме 
+// Типизация ошибок в форме
 export type FormErrors = Partial<Record<keyof IOrder, string>>;
