@@ -4,10 +4,7 @@
 
 Стек:  
 
-<img src="https://img.shields.io/badge/HTML-E34F26?style=for-the-badge&logo=html5&logoColor=white"/>
-<img src="https://img.shields.io/badge/SCSS-3178C6?style=for-the-badge&logo=css3&logoColor=white"/>
-<img src="https://img.shields.io/badge/TypeSript-3178C6?style=for-the-badge&logo=typescript&logoColor=white"/>
-<img src="https://img.shields.io/badge/Webpack-8DD6F9?style=for-the-badge&logo=webpack&logoColor=white"/>
+<img src="https://img.shields.io/badge/HTML-E34F26?style=for-the-badge&logo=html5&logoColor=white"/>&nbsp;<img src="https://img.shields.io/badge/SCSS-3178C6?style=for-the-badge&logo=css3&logoColor=white"/>&nbsp;<img src="https://img.shields.io/badge/TypeSript-3178C6?style=for-the-badge&logo=typescript&logoColor=white"/>&nbsp;<img src="https://img.shields.io/badge/Webpack-8DD6F9?style=for-the-badge&logo=webpack&logoColor=white"/>
 
 
 Структура проекта:
@@ -90,6 +87,7 @@ src/types/
 ├── api.ts         # API-контракты и транспортные типы
 ├── views.ts       # Интерфейсы представлений и UI-компонентов
 ├── events.ts      # Система событий приложения
+└── models.ts      # Модели ICatalogModel, IBasketModel, IOrderModel 
 ```
 ### Данные (data.ts)
 #### Основные сущности:
@@ -139,6 +137,31 @@ interface IOrderResponse {
 }
 ```
 
+### Модели (models.ts)
+#### Структура моделей
+
+```typescript
+interface ICatalogModel {
+  items: IProduct[]; // Array всех товаров
+  setItems(items: IProduct[]): void; // обновление товаров
+  getItems(): IProduct[];        // получение товаров
+  getItem(id: string): IProduct; // получение товара по id
+}
+interface IBasketModel {
+  items: Map<string, number>;         // массив товаров в корзине
+  add(id: string): void;              // метод добавления товаров в корзину
+  remove(id: string): void;           // метод удаления товаров из корзины
+  getCartValue(cost: number): number; // метод получения итоговой стоиомсти товаров
+  clear(): void;                      // очистка корзины
+}
+interface IOrderModel {
+  updateField<K extends keyof IOrder>(field: K, value: IOrder[K]): void; // Обновляет конкретное поле заказа, все поля заказа уже объединены в IOrder  
+  validate(): { isValid: boolean; errors: FormErrors }; // валидация
+  getOrderData(): IOrder; // метод получения всех данных для отправки заказа на сервер
+}
+
+```
+
 ### Представления (views.ts)
 #### Компонентная структура:
 
@@ -164,23 +187,11 @@ interface IFormState {
   valid: boolean;    // валидна ли форма
   errors: string[];  // ошибка, если форма не валидна
 }
-interface ICatalogModel {
-  items: IProduct[]; // Array всех товаров
-  setItems(items: IProduct[]): void; // обновление товаров
-  getItems(): IProduct[];        // получение товаров
-  getItem(id: string): IProduct; // получение товара по id
-}
-interface IBasketModel {
-  items: Map<string, number>;         // массив товаров в корзине
-  add(id: string): void;              // метод добавления товаров в корзину
-  remove(id: string): void;           // метод удаления товаров из корзины
-  getCartValue(cost: number): number; // метод получения итоговой стоиомсти товаров
-}
 interface IBasketView {
   render(): void; // отображение корзины
   update(items: Map<string, number>): void; // метод обновления корзины
-  clear(): void; // метод удаления товаров из корзины
 }
+type FormErrors = Partial<Record<keyof IOrder, string>>; // типизация ошибок в форме
 ```
 ## Система событий
 

@@ -2,7 +2,7 @@ import { PaymentMethod } from './data';
 
 
 // Интерфейс для api
-interface IApi {
+export interface IApi {
 	baseUrl: string;
 	options: RequestInit;
 	handleResponse(response: Response): Promise<object>;

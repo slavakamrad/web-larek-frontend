@@ -29,22 +29,6 @@ export interface IFormState {
   errors: string[];
 }
 
-// Интерфейс каталога товаров (Model-View)
-export interface ICatalogModel {
-  items: IProduct[];
-  setItems(items: IProduct[]): void;
-  getItems(): IProduct[];
-  getItem(id: string): IProduct;
-}
-
-// Интерфейс корзины товаров (Model)
-export interface IBasketModel {
-  items: Map<string, number>;
-  add(id: string): void;
-  remove(id: string): void;
-  getCartValue(cost: number): number;
-}
-
 // Интерфейс корзины товаров (View) 
 export interface IBasketView {
   render(): void;
