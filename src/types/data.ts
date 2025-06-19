@@ -11,6 +11,7 @@ export type ProductCategory =
 
 //  Интерфейс для продукта
 export interface IProduct {
+  isInBasket: boolean;
   id: string;
   description: string;
   image: string;
