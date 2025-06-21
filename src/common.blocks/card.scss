@@ -40,6 +40,12 @@
     gap: $defaultPadding;
   }
 
+  &__count {// добавил, чтоб было видно количество одинакового товара в корзине
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
   &__image {
     height: 390px;
     aspect-ratio: 1;

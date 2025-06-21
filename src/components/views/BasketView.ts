@@ -52,6 +52,7 @@ export class BasketView extends AppModal implements IBasketView {
 		    item.innerHTML = `
 		        <span class="basket__item-index">${index++}</span>
 		        <span class="card__title">${product.title}</span>
+            <span class="card__count">${count}шт.</span>
 		        <span class="card__price">${product.price * count} синапсов</span>
 		        <button class="basket__item-delete card__button" aria-label="удалить"></button>
 		    `;
