@@ -22,6 +22,7 @@ export interface IPopup extends IView {
 
 // Интерфейс попапа превью товара
 export interface IProductPreview extends IPopup {
+  button: HTMLButtonElement;
   addToCart(handler: () => void): void;
 }
 

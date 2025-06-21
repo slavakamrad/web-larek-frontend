@@ -30,7 +30,7 @@ export class CatalogView extends Component<IProduct[]> implements ICatalogView {
       const card = element.querySelector('.card') as HTMLElement;
       
       this.setText(ensureElement('.card__title', card), item.title);
-      this.setText(ensureElement('.card__price', card), `${item.price} синапсов`);
+      this.setText(ensureElement('.card__price', card), item.price ? `${item.price} синапсов` : "Бесценно");
       this.setImage(ensureElement<HTMLImageElement>('.card__image', card), item.image);
       const category = ensureElement('.card__category', card);     
       const categoryName = this.categoryNames[item.category]
