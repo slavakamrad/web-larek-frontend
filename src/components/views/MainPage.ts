@@ -71,7 +71,6 @@ export class MainPage extends Component<{}> implements IView {
 		this.catalog.itemClick((product) => {
 			this.preview.render(product);
 			this.preview.open();
-			console.log(product)
 		});
 
 		// // При добавлении товара в корзину из превью

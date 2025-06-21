@@ -1,5 +1,5 @@
 import { cardCatalogTemplate } from "../../index";
-import { IProduct } from "../../types/data";
+import { IProduct, ProductCategory } from "../../types/data";
 import { ICatalogView } from "../../types/views";
 import { ensureElement } from "../../utils/utils";
 import { Component } from "../base/component";
@@ -9,6 +9,14 @@ import { IEvents } from "../base/events";
 export class CatalogView extends Component<IProduct[]> implements ICatalogView {
   protected _items: HTMLElement[] = [];
   protected _products: IProduct[] = []; // Добавляем хранилище продуктов
+  categoryNames: Record<ProductCategory, string> = {
+    "дополнительное": "additional",
+    "софт-скил": "soft",
+    "кнопка": "button",
+    "хард-скил": "hard",
+    "другое": "other",
+  };
+
 
   constructor(container: HTMLElement, protected events: IEvents) {
     super(container);
@@ -24,9 +32,9 @@ export class CatalogView extends Component<IProduct[]> implements ICatalogView {
       this.setText(ensureElement('.card__title', card), item.title);
       this.setText(ensureElement('.card__price', card), `${item.price} синапсов`);
       this.setImage(ensureElement<HTMLImageElement>('.card__image', card), item.image);
-      
-      const category = ensureElement('.card__category', card);
-      category.className = `card__category card__category_${item.category}`;
+      const category = ensureElement('.card__category', card);     
+      const categoryName = this.categoryNames[item.category]
+      category.className = `card__category card__category_${categoryName}`;
       category.textContent = item.category;
       
       return card;
