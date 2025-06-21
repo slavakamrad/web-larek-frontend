@@ -1,65 +1,76 @@
-// import { IProduct } from "../../types/data";
-// import { IBasketView } from "../../types/views";
-// import { ensureElement } from "../../utils/utils";
-// import { IEvents } from "../base/events";
-// import { AppModal } from "./Popup";
+import { basketTemplate } from '../../utils/templates';
+import { IProduct } from '../../types/data';
+import { IBasketView } from '../../types/views';
+import { ensureElement } from '../../utils/utils';
+import { IEvents } from '../base/events';
+import { AppModal, IPopupData } from './Popup';
 
-// // Корзина
-// export class BasketView extends AppModal implements IBasketView {
-//   protected _list: HTMLElement;
-//   protected _total: HTMLElement;
-//   protected _button: HTMLButtonElement;
+export class BasketView extends AppModal implements IBasketView {
+	list: HTMLElement;
+	total: HTMLElement;
+	button: HTMLButtonElement;
+	basketItems: Map<string, { product: IProduct; count: number }>;
 
-//   constructor(container: HTMLElement, events: IEvents) {
-//     super(container, events);
-//     this._list = ensureElement<HTMLElement>('.basket__list', this.content);
-//     this._total = ensureElement<HTMLElement>('.basket__price', this.content);
-//     this._button = ensureElement<HTMLButtonElement>('.basket__button', this.content);
-//   }
-//   deleteItem(handler: (id: string) => void): void {
-//     throw new Error("Method not implemented.");
-//   }
-//   update(items: Map<string, { product: IProduct; count: number; }>): void {
-//     throw new Error("Method not implemented.");
-//   }
-//   handleESC(evt: KeyboardEvent): void {
-//     throw new Error("Method not implemented.");
-//   }
+	constructor(container: HTMLElement, events: IEvents) {
+		super(container, events);
+		const content = basketTemplate.content.cloneNode(true) as DocumentFragment;
+		this.content.replaceChildren(content);
 
-//   render(data?: Partial<Map<string, { product: IProduct, count: number }>>): HTMLElement {
-//     if (!data) return this.container;
+		this.list = ensureElement<HTMLElement>('.basket__list', this.content);
+		this.total = ensureElement<HTMLElement>('.basket__price', this.content);
+		this.button = ensureElement<HTMLButtonElement>(
+			'.basket__button',
+			this.content
+		);
+	}
+
+	render(data: IBasketView): HTMLElement {
+		if (!data) return this.container;
+
+		const content = basketTemplate.content.cloneNode(true) as DocumentFragment;
+		this.content.replaceChildren(content);
+
+		this.list.innerHTML = '';
+		let total = 0;
+		let index = 1;  
+
     
-//     this._list.innerHTML = '';
-//     let total = 0;
-//     let index = 1;
 
-//     data.forEach(({ product, count }, id) => {
-//       const item = document.createElement('li');
-//       item.className = 'basket__item card card_compact';
-//       item.innerHTML = `
-//         <span class="basket__item-index">${index++}</span>
-//         <span class="card__title">${product.title}</span>
-//         <span class="card__price">${product.price * count} синапсов</span>
-//         <button class="basket__item-delete card__button" aria-label="удалить"></button>
-//       `;
-//       // item.querySelector('.basket__item-delete')?.addEventListener('click', () => {
-//       //   this.events.emit('basket:remove', id);
-//       // });
-//       this._list.appendChild(item);
-//       total += product.price * count;
-//     });
+		// data.basketItems.forEach(({ product, count }, id) => {
+		//     const item = document.createElement('li');
+		//     item.className = 'basket__item card card_compact';
+		//     item.innerHTML = `
+		//         <span class="basket__item-index">${index++}</span>
+		//         <span class="card__title">${product.title}</span>
+		//         <span class="card__price">${product.price * count} синапсов</span>
+		//         <button class="basket__item-delete card__button" aria-label="удалить"></button>
+		//     `;
+		//     this.list.appendChild(item);
+		//     total += product.price * count;
+		// });
 
-//     this.setText(this._total, `${total} синапсов`);
-//     this.setDisabled(this._button, data.size === 0);
-    
-//     return this.container;
-//   }
+		this.setText(this.total, `${total} синапсов`);
+		// this.setDisabled(this.button, data.basketItems.size === 0);
 
-//   // deleteItem(handler: (id: string) => void): void {
-//   //   this.events.on('basket:remove', handler);
-//   // }
+		return this.container;
+	}
 
-//   // bindCheckout(handler: () => void): void {
-//   //   this._button.addEventListener('click', handler);
-//   // }
-// }
+	// // Остальные методы
+	update(items: Map<string, { product: IProduct; count: number }>): void {
+		// this.render({ basketItems: items, content: this.content });
+	}
+
+	deleteItem(handler: (id: string) => void): void {
+		this.list.addEventListener('click', (e) => {
+			const target = e.target as HTMLElement;
+			if (target.classList.contains('basket__item-delete')) {
+				const itemId = target.closest('li')?.getAttribute('data-id');
+				if (itemId) handler(itemId);
+			}
+		});
+	}
+
+	bindCheckout(handler: () => void): void {
+		this.button.addEventListener('click', handler);
+	}
+}

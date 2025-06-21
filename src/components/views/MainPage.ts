@@ -18,32 +18,38 @@ import { CatalogView } from './CatalogView';
 import { ensureElement } from '../../utils/utils';
 import { IProduct } from '../../types/data';
 import { ProductPreview } from './ProductPreview';
+import { BasketView } from './BasketView';
 
 export class MainPage extends Component<{}> implements IView {
-	catalog: ICatalogView;
-	preview: IProductPreview;
+	catalogView: ICatalogView;
+	productPreview: IProductPreview;
 	basket: IBasketView;
 	orderForm: IOrderFormView;
 	contactsForm: IContactsFormView;
 	success: ISuccessView;
+	basketIcon: HTMLElement;
 
 	constructor(container: HTMLElement, protected events: IEvents) {
 		super(container);
 	
-		this.catalog = new CatalogView(
+		this.catalogView = new CatalogView(
 			ensureElement<HTMLElement>('.gallery'),
 			events
 		);  
 
-		this.preview = new ProductPreview(
-			ensureElement<HTMLElement>('#modal-container'), // Используем modal-container как контейнер
+		this.productPreview = new ProductPreview(
+			ensureElement<HTMLElement>('#modal-container'),  
 			events
 		);
-    
-		// this.basket = new BasketView(
-		// 	ensureElement<HTMLElement>('#basket'),
-		// 	events
-		// );
+    		
+
+		this.basket = new BasketView(
+			ensureElement<HTMLElement>('#modal-container'),
+			events
+		);
+
+		this.basketIcon = ensureElement<HTMLElement>('.header__basket');
+		 
 		// this.orderForm = new OrderFormView(
 		// 	ensureElement<HTMLElement>('#order-modal'),
 		// 	events
@@ -64,23 +70,33 @@ export class MainPage extends Component<{}> implements IView {
 	// Настройка обработчиков событий между компонентами
 	setupEventHandlers(): void {
     this.events.on('items:changed', (data: { items: IProduct[] }) => {
-      this.catalog.render(data.items);
+      this.catalogView.render(data.items);
     });	
 
 		// При клике на товар в каталоге открываем превью
-		this.catalog.itemClick((product) => {
-			this.preview.render(product);
-			this.preview.open();
+		this.catalogView.itemClick((product) => {
+			this.productPreview.render(product);
+			this.productPreview.open();
 		
 		});
 
-		// // При добавлении товара в корзину из превью
+
+		// Обработчик клика на иконку корзины		
+		this.basketIcon.addEventListener('click', () => {
+			this.basket.render({ 
+					// items: this.getBasketItems()  
+			});
+			this.basket.open();
+	});
+
+
+		// При добавлении товара в корзину из превью
 		// this.preview.addToCart(() => {
 		// 	this.preview.close();
 		// 	this.events.emit('basket:add' /* product */);
 		// });
 
-		// // При открытии корзины
+		// При открытии корзины
 		// this.events.on('basket:open', () => {
 		// 	this.basket.open();
 		// });

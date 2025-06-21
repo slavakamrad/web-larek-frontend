@@ -1,4 +1,4 @@
-import { cardPreviewTemplate } from "../../index";
+import { cardPreviewTemplate } from "../../utils/templates";
 import { IProduct, ProductCategory } from "../../types/data";
 import { IProductPreview } from "../../types/views";
 import { ensureElement } from "../../utils/utils";
@@ -34,18 +34,16 @@ export class ProductPreview extends AppModal implements IProductPreview {
   render(data?: IProduct): HTMLElement {
     if (!data) return this.container;
 
-    // Копируем шаблон в контент модалки
     const content = cardPreviewTemplate.content.cloneNode(true) as DocumentFragment;
     this.content.replaceChildren(content);
  
-    // Заполняем данными
     const card = this.content.querySelector('.card') as HTMLElement;
     const category = ensureElement('.card__category', card);     
     const categoryName = this.categoryNames[data.category]
     category.className = `card__category card__category_${categoryName}`;
     category.textContent = data.category;
     const button = ensureElement<HTMLButtonElement>('.card__button', card);
-
+    
     this.setText(ensureElement<HTMLImageElement>('.card__title', card), data.title);
     this.setText(ensureElement<HTMLImageElement>('.card__text', card), data.description);
     this.setImage(ensureElement<HTMLImageElement>('.card__image', card), data.image);

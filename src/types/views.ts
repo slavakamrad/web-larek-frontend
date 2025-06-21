@@ -28,6 +28,7 @@ export interface IProductPreview extends IPopup {
 
 // Интерфейс попапа корзины
 export interface IBasketView extends IPopup {
+  basketItems: Map<string, { product: IProduct; count: number }>;
   update(items: Map<string, { product: IProduct, count: number }>): void;
   deleteItem(handler: (id: string) => void): void;
   bindCheckout(handler: () => void): void;

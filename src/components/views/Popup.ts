@@ -1,10 +1,10 @@
-import { IProduct } from '../../types/data';
+import { IOrder, IProduct } from '../../types/data';
 import { IBasketView, IPopup } from '../../types/views';
 import { ensureElement } from '../../utils/utils';
 import { Component } from '../base/component';
 import { IEvents } from '../base/events';
 
-interface IPopupData extends IProduct, IBasketView {
+export interface IPopupData extends IProduct, IBasketView, IOrder {
 	content: HTMLElement;
 }
 
@@ -16,9 +16,7 @@ export class AppModal extends Component<IPopupData> implements IPopup {
 		super(container);
 
 		this._closeButton = document.querySelector('.modal__close');
-
 		this.content = document.querySelector('.modal__content');
-
 		this._closeButton.addEventListener('click', this.close.bind(this));
 		this.container.addEventListener('click', this.close.bind(this));
 		this.content.addEventListener('click', (evt) => evt.stopPropagation());
@@ -28,19 +26,15 @@ export class AppModal extends Component<IPopupData> implements IPopup {
 		return this._closeButton;
 	}
 
-	// set content(content: HTMLElement) {
-	// 	this._content.replaceChildren(content);
-	// }
-
 	open(): void {
 		this.container.classList.add('modal_active');
-		this.events.emit('modal:open');
+		this.events.emit('modal:open', this.container);
 	}
 
 	close(): void {
 		this.container.classList.remove('modal_active');
 		this.content.innerHTML = '';
-		this.events.emit('modal:close');
+		this.events.emit('modal:close', this.container);
 	}
 
 	handleESC(evt: KeyboardEvent): void {

@@ -1,4 +1,4 @@
-import { cardCatalogTemplate } from "../../index";
+import { cardCatalogTemplate } from "../../utils/templates";
 import { IProduct, ProductCategory } from "../../types/data";
 import { ICatalogView } from "../../types/views";
 import { ensureElement } from "../../utils/utils";
