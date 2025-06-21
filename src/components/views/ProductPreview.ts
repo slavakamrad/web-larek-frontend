@@ -1,59 +1,88 @@
-import { cardPreviewTemplate } from "../../utils/templates";
-import { IProduct, ProductCategory } from "../../types/data";
-import { IProductPreview } from "../../types/views";
-import { ensureElement } from "../../utils/utils";
-import { IEvents } from "../base/events";
-import { AppModal } from "./Popup";
+import { cardPreviewTemplate } from '../../utils/templates';
+import { IProduct, ProductCategory } from '../../types/data';
+import { IProductPreview } from '../../types/views';
+import { ensureElement } from '../../utils/utils';
+import { IEvents } from '../base/events';
+import { AppModal } from './Popup';
 
 export class ProductPreview extends AppModal implements IProductPreview {
-  button: HTMLButtonElement;
-    categoryNames: Record<ProductCategory, string> = {
-      "дополнительное": "additional",
-      "софт-скил": "soft",
-      "кнопка": "button",
-      "хард-скил": "hard",
-      "другое": "other",
-    };
+	button: HTMLButtonElement;
+	currentProduct: IProduct;
 
-  constructor(container: HTMLElement, events: IEvents) {
-    super(container, events);
-    const content = cardPreviewTemplate.content.cloneNode(true) as DocumentFragment;
-    this.content.replaceChildren(content);
-    this.button = ensureElement<HTMLButtonElement>('.card__button', this.content);
-   
-  }
+	categoryNames: Record<ProductCategory, string> = {
+		дополнительное: 'additional',
+		'софт-скил': 'soft',
+		кнопка: 'button',
+		'хард-скил': 'hard',
+		другое: 'other',
+	};
 
-  blockProductSale(button: HTMLButtonElement, data:IProduct) {
-    if(data.price) {
-      return "В корзину"
-    }      
-    button.setAttribute('disabled', 'true')
-    return "Товар не продается"
-  }
+	constructor(container: HTMLElement, events: IEvents) {
+		super(container, events);
+		const content = cardPreviewTemplate.content.cloneNode(
+			true
+		) as DocumentFragment;
+		this.content.replaceChildren(content);
+		this.button = ensureElement<HTMLButtonElement>(
+			'.card__button',
+			this.content
+		);
+	}
 
-  render(data?: IProduct): HTMLElement {
-    if (!data) return this.container;
+	blockProductSale(button: HTMLButtonElement, data: IProduct) {
+		if (data.price) {
+			return 'В корзину';
+		}
+		button.setAttribute('disabled', 'true');
+		return 'Товар не продается';
+	}
 
-    const content = cardPreviewTemplate.content.cloneNode(true) as DocumentFragment;
-    this.content.replaceChildren(content);
- 
-    const card = this.content.querySelector('.card') as HTMLElement;
-    const category = ensureElement('.card__category', card);     
-    const categoryName = this.categoryNames[data.category]
-    category.className = `card__category card__category_${categoryName}`;
-    category.textContent = data.category;
-    const button = ensureElement<HTMLButtonElement>('.card__button', card);
-    
-    this.setText(ensureElement<HTMLImageElement>('.card__title', card), data.title);
-    this.setText(ensureElement<HTMLImageElement>('.card__text', card), data.description);
-    this.setImage(ensureElement<HTMLImageElement>('.card__image', card), data.image);
-    this.setText(ensureElement<HTMLImageElement>('.card__price', card), data.price ? `${data.price} синапсов` : "Бесценно");
-    this.setText(ensureElement<HTMLButtonElement>('.card__button', card), this.blockProductSale(button, data));
-    
-    return this.container;
-}
+    render(data?: IProduct): HTMLElement {
+        if (!data) return this.container;
 
-  addToCart(handler: () => void): void {
-    this.button.addEventListener('click', handler);
-  }
+        this.currentProduct = data;
+
+        // Очищаем контент и рендерим заново
+        const content = cardPreviewTemplate.content.cloneNode(true) as DocumentFragment;
+        this.content.replaceChildren(content);
+
+        const card = this.content.querySelector('.card') as HTMLElement;
+        const category = ensureElement('.card__category', card);
+        const categoryName = this.categoryNames[data.category];
+        category.className = `card__category card__category_${categoryName}`;
+        category.textContent = data.category;
+
+        this.button = ensureElement<HTMLButtonElement>('.card__button', card);
+
+        // Заполняем данные
+        this.setText(
+          ensureElement<HTMLImageElement>('.card__title', card),
+          data.title
+        );
+        this.setText(
+          ensureElement<HTMLImageElement>('.card__text', card),
+          data.description
+        );
+        this.setImage(
+          ensureElement<HTMLImageElement>('.card__image', card),
+          data.image
+        );
+        this.setText(
+          ensureElement<HTMLImageElement>('.card__price', card),
+          data.price ? `${data.price} синапсов` : 'Бесценно'
+        );
+        this.setText(
+          ensureElement<HTMLButtonElement>('.card__button', card),
+          this.blockProductSale(this.button, data)
+        );
+        
+        this.button.addEventListener('click', ()=>{     
+          this.events.emit('basket:add', this.currentProduct);
+          this.close();
+        })
+
+        return this.container;
+    }
+
+  
 }
