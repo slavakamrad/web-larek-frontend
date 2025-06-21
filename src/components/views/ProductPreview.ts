@@ -18,14 +18,11 @@ export class ProductPreview extends AppModal implements IProductPreview {
   render(data?: IProduct): HTMLElement {
     if (!data) return this.container;
 
-    // Копируем шаблон в контент модалки
     const content = cardPreviewTemplate.content.cloneNode(true) as DocumentFragment;
     this.content.replaceChildren(content);
-
-    // Заполняем данными
+ 
     const card = this.content.querySelector('.card') as HTMLElement;
     this.setText(ensureElement('.card__title', card), data.title);
-    // ... остальной рендеринг ...
 
     return this.container;
 }

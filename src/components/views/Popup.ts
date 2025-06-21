@@ -35,7 +35,6 @@ export class AppModal extends Component<IPopupData> implements IPopup {
 	open(): void {
 		this.container.classList.add('modal_active');
 		this.events.emit('modal:open');
-		console.log(this.container)
 	}
 
 	close(): void {
