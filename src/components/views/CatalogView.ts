@@ -35,6 +35,7 @@ export class CatalogView extends Component<IProduct[]> implements ICatalogView {
       const category = ensureElement('.card__category', card);     
       const categoryName = this.categoryNames[item.category]
       category.className = `card__category card__category_${categoryName}`;
+
       category.textContent = item.category;
       
       return card;
