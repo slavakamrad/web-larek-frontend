@@ -4,7 +4,8 @@ import { EventEmitter } from '../base/events';
 
 
 export class CatalogModel implements ICatalogModel {
-  private _items: IProduct[] = [];
+  _items: IProduct[] = [];
+  preview: string | null;
 
   constructor(
     protected events: EventEmitter
@@ -16,6 +17,11 @@ export class CatalogModel implements ICatalogModel {
     this._items = items;
     this.events.emit('items:changed', { items: this._items });
   }
+
+  setItem(item: IProduct): void {
+		this.preview = item.id;
+		this.events.emit('preview:change', item);
+	}
 
   getItems(): IProduct[] {
     return this._items;

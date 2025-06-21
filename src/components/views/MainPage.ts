@@ -35,13 +35,13 @@ export class MainPage extends Component<{}> implements IView {
 			events
 		);  
 
-		// this.preview = new ProductPreview(
-		// 	ensureElement<HTMLElement>('#card-preview'),
-		// 	events
-		// );
+		this.preview = new ProductPreview(
+			ensureElement<HTMLElement>('#modal-container'), // Используем modal-container как контейнер
+			events
+		);
     
 		// this.basket = new BasketView(
-		// 	ensureElement<HTMLElement>('#basket-modal'),
+		// 	ensureElement<HTMLElement>('#basket'),
 		// 	events
 		// );
 		// this.orderForm = new OrderFormView(
@@ -65,12 +65,14 @@ export class MainPage extends Component<{}> implements IView {
 	setupEventHandlers(): void {
     this.events.on('items:changed', (data: { items: IProduct[] }) => {
       this.catalog.render(data.items);
-    });
-		// // При клике на товар в каталоге открываем превью
-		// this.catalog.itemClick((product) => {
-		// 	this.preview.render(product);
-		// 	this.preview.open();
-		// });
+    });	
+
+		// При клике на товар в каталоге открываем превью
+		this.catalog.itemClick((product) => {
+			this.preview.render(product);
+			this.preview.open();
+			console.log(product)
+		});
 
 		// // При добавлении товара в корзину из превью
 		// this.preview.addToCart(() => {

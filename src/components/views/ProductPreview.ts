@@ -1,12 +1,12 @@
-import { cardPreviewTemplate } from "../..";
+import { cardPreviewTemplate } from "../../index";
 import { IProduct } from "../../types/data";
 import { IProductPreview } from "../../types/views";
 import { ensureElement } from "../../utils/utils";
 import { IEvents } from "../base/events";
-import { Modal } from "./Popup";
+import { AppModal } from "./Popup";
 
-export class ProductPreview extends Modal<IProduct> implements IProductPreview {
-  protected _button: HTMLButtonElement;
+export class ProductPreview extends AppModal implements IProductPreview {
+  _button: HTMLButtonElement;
 
   constructor(container: HTMLElement, events: IEvents) {
     super(container, events);
@@ -17,21 +17,18 @@ export class ProductPreview extends Modal<IProduct> implements IProductPreview {
 
   render(data?: IProduct): HTMLElement {
     if (!data) return this.container;
-    
-    // Исправляем приведением типа
+
+    // Копируем шаблон в контент модалки
+    const content = cardPreviewTemplate.content.cloneNode(true) as DocumentFragment;
+    this.content.replaceChildren(content);
+
+    // Заполняем данными
     const card = this.content.querySelector('.card') as HTMLElement;
-    
     this.setText(ensureElement('.card__title', card), data.title);
-    this.setText(ensureElement('.card__price', card), `${data.price} синапсов`);
-    this.setImage(ensureElement<HTMLImageElement>('.card__image', card), data.image);
-    this.setText(ensureElement('.card__text', card), data.description);
-    
-    const category = ensureElement('.card__category', card);
-    category.className = `card__category card__category_${data.category}`;
-    category.textContent = data.category;
-    
+    // ... остальной рендеринг ...
+
     return this.container;
-  }
+}
 
   addToCart(handler: () => void): void {
     this._button.addEventListener('click', handler);

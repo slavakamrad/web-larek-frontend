@@ -1,40 +1,58 @@
-import { IPopup } from "../../types/views";
-import { ensureElement } from "../../utils/utils";
-import { Component } from "../base/component";
-import { IEvents } from "../base/events";
+import { IProduct } from '../../types/data';
+import { IBasketView, IPopup } from '../../types/views';
+import { ensureElement } from '../../utils/utils';
+import { Component } from '../base/component';
+import { IEvents } from '../base/events';
 
-// Базовый класс для модальных окон
-export abstract class Modal<T> extends Component<T> implements IPopup{
-  closeButton: HTMLButtonElement;
-  content: HTMLElement;
+interface IPopupData extends IProduct, IBasketView {
+	content: HTMLElement;
+}
 
-  constructor(container: HTMLElement, protected events: IEvents) {
-    super(container);
-    this.content = ensureElement<HTMLElement>('.modal__content', this.container);
-    this.closeButton = ensureElement<HTMLButtonElement>('.modal__close', this.container);
-    
-    
-    this.closeButton.addEventListener('click', this.close.bind(this));
-    this.container.addEventListener('click', this.handleOverlayClick.bind(this));
-  }
+export class AppModal extends Component<IPopupData> implements IPopup {
+	_closeButton: HTMLButtonElement;
+	content: HTMLElement;
 
-  open(): void {
-    this.container.classList.add('modal_active');
-    document.addEventListener('keydown', this.handleESC.bind(this));
-    this.events.emit('modal:open');
-  }
+	constructor(container: HTMLElement, protected events: IEvents) {
+		super(container);
 
-  close(): void {
-    this.container.classList.remove('modal_active');
-    document.removeEventListener('keydown', this.handleESC.bind(this));
-    this.events.emit('modal:close');
-  }
+		this._closeButton = document.querySelector('.modal__close');
 
-  handleESC(evt: KeyboardEvent) {
-    if (evt.key === 'Escape') this.close();
-  }
+		this.content = document.querySelector('.modal__content');
 
-  handleOverlayClick(evt: MouseEvent) {
-    if (evt.target === this.container) this.close();
-  }
+		this._closeButton.addEventListener('click', this.close.bind(this));
+		this.container.addEventListener('click', this.close.bind(this));
+		this.content.addEventListener('click', (evt) => evt.stopPropagation());
+	}
+
+	get closeButton(): HTMLButtonElement {
+		return this._closeButton;
+	}
+
+	// set content(content: HTMLElement) {
+	// 	this._content.replaceChildren(content);
+	// }
+
+	open(): void {
+		this.container.classList.add('modal_active');
+		this.events.emit('modal:open');
+		console.log(this.container)
+	}
+
+	close(): void {
+		this.container.classList.remove('modal_active');
+		this.content.innerHTML = '';
+		this.events.emit('modal:close');
+	}
+
+	handleESC(evt: KeyboardEvent): void {
+		if (evt.key === 'Escape') {
+			this.close();
+		}
+	}
+
+	render(data: IPopupData): HTMLElement {
+		super.render(data);
+		this.open();
+		return this.container;
+	}
 }
