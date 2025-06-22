@@ -18,6 +18,7 @@ import { IOrder, IProduct } from '../../types/data';
 import { ProductPreview } from './ProductPreview';
 import { BasketView } from './BasketView';
 import { ContactsFormView } from './ContactsFormView';
+import { AppApi } from '../models/AppApi';
 
 export class MainPage extends Component<{}> implements IView {
 	catalogView: ICatalogView;
@@ -29,7 +30,8 @@ export class MainPage extends Component<{}> implements IView {
 	basketIcon: HTMLElement;
 	basketCounter: HTMLElement;
 	basketItems: Map<string, { product: IProduct; count: number }> = new Map();
-
+	private api: AppApi;
+	
 	constructor(container: HTMLElement, protected events: IEvents) {
 		super(container);
 
@@ -90,45 +92,34 @@ export class MainPage extends Component<{}> implements IView {
 			this.basket.open();
 		});
 
+		this.events.on('basket:check', (data: { id: string, callback: (isInBasket: boolean) => void }) => {
+			data.callback(this.basketItems.has(data.id));
+	});
+
 		// Добавление товаров в корзину
 		this.events.on('basket:add', (product: IProduct) => {
-			if (!product) return;
+			if (!product || this.basketItems.has(product.id)) return;
 
-			const existing = this.basketItems.get(product.id);
-			if (existing) {
-				existing.count += 1;
-			} else {
-				this.basketItems.set(product.id, {
+			this.basketItems.set(product.id, {
 					product,
-					count: 1,
-				});
-			}
+					count: 1, // Всегда 1, так как нельзя добавить несколько одинаковых товаров
+			});
 
 			this.updateBasketIcon();
 			this.events.emit('basket:changed', this.basketItems);
-		});
+	});
 
 		// Удаление товаров
-		this.events.on('basket:remove', (data: { id: string }) => {
-			const item = this.basketItems.get(data.id);
-			if (!item) return;
-
-			if (item.count > 1) {
-				item.count -= 1;
-			} else {
-				this.basketItems.delete(data.id);
-			}
-
+    this.events.on('basket:remove', (data: { id: string }) => {
+			this.basketItems.delete(data.id);
 			this.updateBasketIcon();
 			this.events.emit('basket:changed', this.basketItems);
+	});
 
-			if (this.basketItems.size === 0) {
-				this.basket.open();
-			}
-		});
 
 		// фиксируем изменения корзинки
 		this.events.on('basket:changed', () => {
+			console.log(this.basketItems)
 			this.basket.render({ basketItems: this.basketItems });
 		});
 
@@ -156,6 +147,43 @@ export class MainPage extends Component<{}> implements IView {
 			});
 			this.contactsForm.open();
 		});
+		
+		
+
+		this.events.on('contacts:submit', (contacts: { email: string, phone: string }) => {
+			try {
+					// Получаем данные из обеих форм
+					// const orderData = {
+					// 		payment: this.orderForm.method === 'card' ? 'online' : 'receipt',
+					// 		email: contacts.email,
+					// 		phone: contacts.phone,
+					// 		address: this.orderForm.address,
+					// 		total: this.calculateTotal(Array.from(this.basketItems.values())),
+					// 		items: Array.from(this.basketItems.keys()) // Только ID товаров
+					// };
+	
+					// console.log('Формируем заказ:', orderData); // Для отладки
+	
+					// // Отправка на сервер
+					// const response = this.api.postOrder(orderData);
+	
+					// // При успешной отправке
+					// this.events.emit('order:success', {
+					// 		total: orderData.total,
+					// 		orderId: response.id
+					// });
+					
+					// // Очищаем корзину
+					// this.basketItems.clear();
+					// this.updateBasketIcon();
+					
+			} catch (error) {
+					console.error('Ошибка оформления заказа:', error);
+					this.events.emit('order:error', error);
+			}
+	});
+ 
+
 	}
 
 	render(): HTMLElement {

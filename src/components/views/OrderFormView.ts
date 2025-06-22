@@ -6,46 +6,99 @@ import { IEvents } from '../base/events';
 import { AppModal } from './Popup';
 
 export class OrderFormView extends AppModal implements IOrderFormView {
-    paymentButtons: HTMLButtonElement[];
-    addressInput: HTMLInputElement;
-    submitButton: HTMLButtonElement;
-    errors: HTMLElement;
-    method: PaymentMethod = 'card';  
-    address: string = '';
+  paymentButtons: HTMLButtonElement[];
+  addressInput: HTMLInputElement;
+  submitButton: HTMLButtonElement;
+  errors: HTMLElement;
+  method: PaymentMethod = "card";
+  address: string = '';
+  static savedData: { payment: PaymentMethod, address: string } | null = null;
 
-    constructor(container: HTMLElement, events: IEvents) {
-        super(container, events);
-    }
-
-    updatePaymentSelection() {
-      this.paymentButtons.forEach(button => {
-          button.classList.toggle('button_alt-active', 
-              button.name === this.method);
-      });
+  constructor(container: HTMLElement, events: IEvents) {
+      super(container, events);
   }
 
+  updatePaymentSelection() {
+      this.paymentButtons.forEach((button) => {
+          button.classList.toggle('button_alt-active', button.name === this.method);
+      });
+      this.validateForm();
+  }
 
-    render(state?: IOrder): HTMLElement {        
-        const content = orderTemplate.content.cloneNode(true) as DocumentFragment;
-        this.content.replaceChildren(content);
-     
-        this.paymentButtons = [
-            ensureElement<HTMLButtonElement>('button[name="card"]', this.content),
-            ensureElement<HTMLButtonElement>('button[name="cash"]', this.content)
-        ];
-        this.addressInput = ensureElement<HTMLInputElement>('input[name="address"]', this.content);
-        this.submitButton = ensureElement<HTMLButtonElement>('button[type="submit"]', this.content);
-        this.errors = ensureElement<HTMLElement>('.form__errors', this.content);
+  render(state?: Partial<IOrder>): HTMLElement {
+      const content = orderTemplate.content.cloneNode(true) as DocumentFragment;
+      this.content.replaceChildren(content);
 
-        this.submitButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.address = this.addressInput.value;
-            this.events.emit('order:addContacts', {
-                payment: this.method,
-                address: this.address,
-            });
-        });
+      this.paymentButtons = [
+          ensureElement<HTMLButtonElement>('button[name="card"]', this.content),
+          ensureElement<HTMLButtonElement>('button[name="cash"]', this.content),
+      ];
+      this.addressInput = ensureElement<HTMLInputElement>('input[name="address"]', this.content);
+      this.submitButton = ensureElement<HTMLButtonElement>('button[type="submit"]', this.content);
+      this.errors = ensureElement<HTMLElement>('.form__errors', this.content);
 
-        return this.container;
-    }
+      // Восстанавливаем сохраненные данные
+      if (OrderFormView.savedData) {
+          this.method = OrderFormView.savedData.payment;
+          this.address = OrderFormView.savedData.address;
+          this.addressInput.value = OrderFormView.savedData.address;
+      } else if (state) {
+          this.method = state.payment || "card";
+          this.address = state.address || '';
+          this.addressInput.value = state.address || '';
+      }
+
+      this.updatePaymentSelection();
+      this.validateForm();
+
+      this.paymentButtons.forEach((button) => {
+          button.addEventListener('click', (e) => {
+              e.preventDefault();
+              this.method = button.name as PaymentMethod;
+              this.updatePaymentSelection();
+              this.saveData();
+          });
+      });
+
+      this.addressInput.addEventListener('input', () => {
+          this.address = this.addressInput.value.trim();
+          this.validateForm();
+          this.saveData();
+      });
+
+      this.submitButton.addEventListener('click', (e) => {
+          e.preventDefault();
+          this.validateAndSubmit();
+      });
+
+      return this.container;
+  }
+
+  saveData(): void {
+      OrderFormView.savedData = {
+          payment: this.method,
+          address: this.address
+      };
+  }
+
+  validateForm(): boolean {
+      this.errors.innerHTML = '';
+      const isValid = !!this.address;
+      this.submitButton.disabled = !isValid;
+      return isValid;
+  }
+
+  validateAndSubmit() {
+      if (this.validateForm()) {
+          this.events.emit('order:addContacts', {
+              payment: this.method,
+              address: this.address,                     
+          } as IOrder);
+      }
+  }
+
+  close(): void {
+      this.saveData(); // Сохраняем данные перед закрытием
+      super.close();
+  }
 }

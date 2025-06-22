@@ -23,7 +23,7 @@ events.on('items:changed', (data: { items: IProduct[] }) => {
   page.catalogView.render(data.items);
 });
 
-// // Чтобы мониторить все события, для отладки
+// Чтобы мониторить все события, для отладки
 // events.onAll(({ eventName, data }) => {
 // 	console.log(eventName, data);
 // });

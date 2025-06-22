@@ -29,60 +29,69 @@ export class ProductPreview extends AppModal implements IProductPreview {
 		);
 	}
 
-	blockProductSale(button: HTMLButtonElement, data: IProduct) {
-		if (data.price) {
-			return 'В корзину';
-		}
-		button.setAttribute('disabled', 'true');
-		return 'Товар не продается';
-	}
-
-    render(data?: IProduct): HTMLElement {
-        if (!data) return this.container;
-
-        this.currentProduct = data;
-
-        // Очищаем контент и рендерим заново
-        const content = cardPreviewTemplate.content.cloneNode(true) as DocumentFragment;
-        this.content.replaceChildren(content);
-
-        const card = this.content.querySelector('.card') as HTMLElement;
-        const category = ensureElement('.card__category', card);
-        const categoryName = this.categoryNames[data.category];
-        category.className = `card__category card__category_${categoryName}`;
-        category.textContent = data.category;
-
-        this.button = ensureElement<HTMLButtonElement>('.card__button', card);
-
-        // Заполняем данные
-        this.setText(
-          ensureElement<HTMLImageElement>('.card__title', card),
-          data.title
-        );
-        this.setText(
-          ensureElement<HTMLImageElement>('.card__text', card),
-          data.description
-        );
-        this.setImage(
-          ensureElement<HTMLImageElement>('.card__image', card),
-          data.image
-        );
-        this.setText(
-          ensureElement<HTMLImageElement>('.card__price', card),
-          data.price ? `${data.price} синапсов` : 'Бесценно'
-        );
-        this.setText(
-          ensureElement<HTMLButtonElement>('.card__button', card),
-          this.blockProductSale(this.button, data)
-        );
-        
-        this.button.addEventListener('click', ()=>{     
-          this.events.emit('basket:add', this.currentProduct);
-          this.close();
-        })
-
-        return this.container;
+  blockProductSale(button: HTMLButtonElement, data: IProduct, isInBasket: boolean) {
+    if (!data.price) {
+        button.setAttribute('disabled', 'true');
+        return 'Товар не продается';
     }
+    return isInBasket ? 'Убрать' : 'Купить';
+}
 
-  
+render(data?: IProduct): HTMLElement {
+    if (!data) return this.container;
+
+    this.currentProduct = data;
+
+    // Очищаем контент и рендерим заново
+    const content = cardPreviewTemplate.content.cloneNode(true) as DocumentFragment;
+    this.content.replaceChildren(content);
+
+    const card = this.content.querySelector('.card') as HTMLElement;
+    const category = ensureElement('.card__category', card);
+    const categoryName = this.categoryNames[data.category];
+    category.className = `card__category card__category_${categoryName}`;
+    category.textContent = data.category;
+
+    this.button = ensureElement<HTMLButtonElement>('.card__button', card);
+
+    // Проверяем, есть ли товар в корзине
+    this.events.emit('basket:check', {
+        id: data.id,
+        callback: (isInBasket: boolean) => {
+            // Заполняем данные
+            this.setText(
+                ensureElement<HTMLImageElement>('.card__title', card),
+                data.title
+            );
+            this.setText(
+                ensureElement<HTMLImageElement>('.card__text', card),
+                data.description
+            );
+            this.setImage(
+                ensureElement<HTMLImageElement>('.card__image', card),
+                data.image
+            );
+            this.setText(
+                ensureElement<HTMLImageElement>('.card__price', card),
+                data.price ? `${data.price} синапсов` : 'Бесценно'
+            );
+            this.setText(
+                this.button,
+                this.blockProductSale(this.button, data, isInBasket)
+            );
+
+            // Обработчик кнопки
+            this.button.addEventListener('click', () => {
+                if (isInBasket) {
+                    this.events.emit('basket:remove', { id: data.id });
+                } else {
+                    this.events.emit('basket:add', data);
+                }
+                this.close();
+            });
+        }
+    });
+
+    return this.container;
+}
 }

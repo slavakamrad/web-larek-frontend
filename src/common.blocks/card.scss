@@ -40,7 +40,7 @@
     gap: $defaultPadding;
   }
 
-  &__count {// добавил, чтоб было видно количество одинакового товара в корзине
+  &__count { 
     position: absolute;
     left: 70%;
     transform: translateX(-50%);
