@@ -15,3 +15,5 @@ export const contactsTemplate = ensureElement<HTMLTemplateElement>('#contacts');
 export const modalElement = ensureElement<HTMLElement>('#modal-container');
 
 export const successTemplate = ensureElement<HTMLTemplateElement>('#success');
+
+export const orderTemplate = ensureElement<HTMLTemplateElement>('#order');

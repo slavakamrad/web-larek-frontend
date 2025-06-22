@@ -1,10 +1,10 @@
 import { IOrder, IProduct } from '../../types/data';
-import { IBasketView, IPopup } from '../../types/views';
+import { IBasketView, IFormState, IPopup } from '../../types/views';
 import { ensureElement } from '../../utils/utils';
 import { Component } from '../base/component';
 import { IEvents } from '../base/events';
 
-export interface IPopupData extends IProduct, IBasketView, IOrder {
+export interface IPopupData extends IProduct, IBasketView, IOrder, IFormState {
 	content: HTMLElement;
 }
 

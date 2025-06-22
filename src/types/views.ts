@@ -1,3 +1,4 @@
+import { IPopupData } from '../components/views/Popup';
 import { IOrder, IProduct, PaymentMethod } from './data';
 
 // Интерфейс Базовое представление
@@ -29,9 +30,6 @@ export interface IProductPreview extends IPopup {
 // Интерфейс попапа корзины
 export interface IBasketView extends IPopup {
   basketItems: Map<string, { product: IProduct; count: number }>;
-  // update(items: Map<string, { product: IProduct, count: number }>): void;
-  deleteItem(handler: (id: string) => void): void;
-  bindCheckout(handler: () => void): void;
 }
 
 // Интерфейс формы заказа (шаг 1 - оплата/адрес)
@@ -40,18 +38,17 @@ export interface IOrderFormView extends IPopup {
   address: string;
   submitButton: HTMLButtonElement;
   errors: HTMLElement;
-  render(state: IFormState): HTMLElement;
-  onSubmit(callback: () => void): void;
+  render(state: IPopupData): HTMLElement;
 }
 
 // Интерфейс формы контактов (шаг 2 - email/телефон)
 export interface IContactsFormView extends IPopup {
-  email: string;
-  phone: string;
+  emailInput: HTMLInputElement;
+  phoneInput: HTMLInputElement;
   submitButton: HTMLButtonElement;
   errors: HTMLElement;
   render(state: IFormState): HTMLElement;
-  onSubmit(callback: () => void): void;
+  
 }
 
 // Попап успешного заказа
@@ -68,3 +65,5 @@ export interface IFormState {
 
 // Типизация ошибок в форме
 export type FormErrors = Partial<Record<keyof IOrder, string>>;
+
+export { IPopupData };

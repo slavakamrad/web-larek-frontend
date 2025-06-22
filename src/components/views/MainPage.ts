@@ -10,13 +10,13 @@ import {
 	ISuccessView,
 } from '../../types/views';
 import { CatalogView } from './CatalogView';
-// import { OrderFormView } from './OrderFormView';
-// import { ContactsFormView } from './ContactsFormView';
+import { OrderFormView } from './OrderFormView'; 
 // import { SuccessView } from './SuccessView';
 import { ensureElement } from '../../utils/utils';
 import { IProduct } from '../../types/data';
 import { ProductPreview } from './ProductPreview';
 import { BasketView } from './BasketView';
+import { ContactsFormView } from './ContactsFormView';
 
 export class MainPage extends Component<{}> implements IView {
 	catalogView: ICatalogView;
@@ -26,7 +26,7 @@ export class MainPage extends Component<{}> implements IView {
 	contactsForm: IContactsFormView;
 	success: ISuccessView;
 	basketIcon: HTMLElement;
-	basketCounter;
+	basketCounter: HTMLElement;
 	basketItems: Map<string, { product: IProduct; count: number }> = new Map();
 
 	constructor(container: HTMLElement, protected events: IEvents) {
@@ -52,26 +52,27 @@ export class MainPage extends Component<{}> implements IView {
 			'.header__basket-counter',
 			this.basketIcon
 		);
-		// this.orderForm = new OrderFormView(
-		// 	ensureElement<HTMLElement>('#order-modal'),
-		// 	events
-		// );
-		// this.contactsForm = new ContactsFormView(
-		// 	ensureElement<HTMLElement>('#contacts-modal'),
-		// 	events
-		// );
+
+		this.orderForm = new OrderFormView(
+			ensureElement<HTMLElement>('#modal-container'),
+			events
+		);
+
+		this.contactsForm = new ContactsFormView(
+			ensureElement<HTMLElement>('#modal-container'),
+			events
+		);
 		// this.success = new SuccessView(
 		// 	ensureElement<HTMLElement>('#success-modal'),
 		// 	events
 		// );
 
-		// Настраиваем обработчики событий между компонентами
+		// Обработчики событий между компонентами
 		this.setupEventHandlers();
 	}
 
 	// Настройка обработчиков событий между компонентами
 	setupEventHandlers(): void {
-		
 		this.events.on('items:changed', (data: { items: IProduct[] }) => {
 			this.catalogView.render(data.items);
 		});
@@ -90,8 +91,7 @@ export class MainPage extends Component<{}> implements IView {
 
 		// Добавление товаров в корзину
 		this.events.on('basket:add', (product: IProduct) => {
-			console.log('Добавляем в корзину:', product);
-			// if (!product) return;
+			if (!product) return;
 
 			const existing = this.basketItems.get(product.id);
 			if (existing) {
@@ -106,29 +106,74 @@ export class MainPage extends Component<{}> implements IView {
 			this.updateBasketIcon();
 			this.events.emit('basket:changed', this.basketItems);
 		});
-		
+
+		// Удаление товаров
+		this.events.on('basket:remove', (data: { id: string }) => {
+				const item = this.basketItems.get(data.id);
+			if (!item) return;
+
+			if (item.count > 1) {
+				item.count -= 1;
+			} else {
+				this.basketItems.delete(data.id);
+			}
+
+			this.updateBasketIcon();
+			this.events.emit('basket:changed', this.basketItems);
+
+			if (this.basketItems.size === 0) {				
+				this.basket.open();
+			}
+		});
+
+		// фиксируем изменения корзинки
 		this.events.on('basket:changed', () => {
 			this.basket.render({ basketItems: this.basketItems });
 		});
 
-		// // При оформлении заказа из корзины
-		// this.basket.bindCheckout(() => {
-		// 	this.basket.close();
-		// 	this.orderForm.open();
-		// });
+		// выбираем способ оплаты и адрес доставки
+		this.events.on('order:init', (data: { items: Array<{ product: IProduct; count: number }> }) => {
+			this.basket.close();
+			// this.orderForm.render({
+			// 		items: data.items,
+			// 		valid: false, // если используется валидация
+			// 		errors: [] // если есть ошибки
+			// });
+			this.orderForm.open();
+	});
 
-		// Другие обработчики событий...
+
+		// вводим контакты покупателя
+		this.events.on('contact:init', () => {
+			this.basket.close();
+			this.contactsForm.render({
+					valid: false,
+					errors: []
+			});
+			this.contactsForm.open();
+	});
+
 	}
 
 	render(): HTMLElement {
 		// Рендерим главную
 		return this.container;
 	}
+
 	private updateBasketIcon(): void {
 		let totalCount = 0;
 		this.basketItems.forEach((item) => {
 			totalCount += item.count;
 		});
 		this.basketCounter.textContent = String(totalCount);
+	}
+
+	private calculateTotal(
+		items: Array<{ product: IProduct; count: number }>
+	): number {
+		return items.reduce(
+			(total, item) => total + item.product.price * item.count,
+			0
+		);
 	}
 }

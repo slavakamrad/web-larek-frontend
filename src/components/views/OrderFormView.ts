@@ -1,56 +1,43 @@
-// // Форма заказа
-// export class OrderFormView extends Modal<IFormState> implements IOrderFormView {
-//   protected _paymentButtons: HTMLButtonElement[];
-//   protected _addressInput: HTMLInputElement;
-//   protected _submitButton: HTMLButtonElement;
-//   protected _errors: HTMLElement;
-//   public method: PaymentMethod = 'card';
-//   public address: string = '';
+import { PaymentMethod } from '../../types/data';
+import { IOrderFormView, IPopupData } from '../../types/views';
+import { orderTemplate } from '../../utils/templates';
+import { ensureElement } from '../../utils/utils';
+import { IEvents } from '../base/events';
+import { AppModal } from './Popup';
 
-//   constructor(container: HTMLElement, events: IEvents) {
-//     super(container, events);
-//     this._paymentButtons = Array.from(this.content.querySelectorAll('.order__buttons button'));
-//     this._addressInput = ensureElement<HTMLInputElement>('input[name="address"]', this.content);
-//     this._submitButton = ensureElement<HTMLButtonElement>('.order__button', this.content);
-//     this._errors = ensureElement<HTMLElement>('.form__errors', this.content);
+export class OrderFormView extends AppModal implements IOrderFormView {
+	paymentButtons: HTMLButtonElement[];
+	addressInput: HTMLInputElement;
+	submitButton: HTMLButtonElement;
+	errors: HTMLElement;
+	method: PaymentMethod = 'online'; // значение по умолчанию - онлайн оплата
+	address: string = '';
 
-//     this._paymentButtons.forEach(button => {
-//       button.addEventListener('click', () => {
-//         this.method = button.name as PaymentMethod;
-//         this._paymentButtons.forEach(btn => 
-//           btn.classList.toggle('button_alt-active', btn === button)
-//         );
-//         this.events.emit('order.payment:change', this.method);
-//       });
-//     });
+	constructor(container: HTMLElement, events: IEvents) {
+		super(container, events);
+	}
 
-//     this._addressInput.addEventListener('input', () => {
-//       this.address = this._addressInput.value;
-//       this.events.emit('order.address:change', this.address);
-//     });
-//   }
+	render(data?: IPopupData): HTMLElement {
+		if (!data) return this.container;
+		this.errors.innerHTML = '';
 
-//   render(data?: Partial<IFormState>): HTMLElement {
-//     if (!data) return this.container;
-    
-//     this._errors.innerHTML = '';
-//     if (!data.valid && data.errors) {
-//       data.errors.forEach(error => {
-//         const errorElement = document.createElement('p');
-//         errorElement.className = 'form__error';
-//         errorElement.textContent = error;
-//         this._errors.appendChild(errorElement);
-//       });
-//     }
-    
-//     this.setDisabled(this._submitButton, !data.valid);
-//     return this.container;
-//   }
+		const content = orderTemplate.content.cloneNode(true) as DocumentFragment;
+		this.content.replaceChildren(content);
 
-//   onSubmit(callback: () => void): void {
-//     this._submitButton.addEventListener('click', (evt) => {
-//       evt.preventDefault();
-//       callback();
-//     });
-//   }
-// }
+		this.paymentButtons = [
+			ensureElement<HTMLButtonElement>('button[name="card"]', this.content),
+			ensureElement<HTMLButtonElement>('button[name="cash"]', this.content),
+		];
+		this.addressInput = ensureElement<HTMLInputElement>(
+			'input[name="address"]',
+			this.content
+		);
+		this.submitButton = ensureElement<HTMLButtonElement>(
+			'button[type="submit"]',
+			this.content
+		);
+		this.errors = ensureElement<HTMLElement>('.form__errors', this.content);
+
+		return this.container;
+	}
+}

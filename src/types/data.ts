@@ -30,6 +30,7 @@ export interface IOrder {
   phone: string;
   address: string;
   total: number;
-  items: string[];
+  items: Array<{ product: IProduct; count: number }>;
 }
+
 
