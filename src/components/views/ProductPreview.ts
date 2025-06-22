@@ -87,12 +87,12 @@ export class ProductPreview extends AppModal implements IProductPreview {
 
 				this.button.addEventListener('click', () => {
 					if (isInBasket) {
-						this.events.emit('basket:remove', { id: data.id });
+							this.events.emit('basket:remove', { id: data.id });
 					} else {
-						this.events.emit('basket:add', data);
+							this.events.emit('basket:add', data);  
 					}
 					this.close();
-				});
+			});
 			},
 		});
 

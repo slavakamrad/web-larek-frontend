@@ -54,7 +54,6 @@ export interface IContactsFormView extends IPopup {
 // Попап успешного заказа
 export interface ISuccessView extends IPopup {
   total: number;
-  setTotal(total: number): void;
 }
 
 // Интерфейс состояния формы

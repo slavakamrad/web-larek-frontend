@@ -12,13 +12,14 @@ import {
 } from '../../types/views';
 import { CatalogView } from './CatalogView';
 import { OrderFormView } from './OrderFormView';
-// import { SuccessView } from './SuccessView';
 import { ensureElement } from '../../utils/utils';
-import { IOrder, IProduct } from '../../types/data';
+import { IOrder, IProduct, PaymentMethod } from '../../types/data';
 import { ProductPreview } from './ProductPreview';
 import { BasketView } from './BasketView';
 import { ContactsFormView } from './ContactsFormView';
 import { AppApi } from '../models/AppApi';
+import { CDN_URL, API_URL } from '../../utils/constants';
+import { SuccessView } from './SuccessView';
 
 export class MainPage extends Component<{}> implements IView {
 	catalogView: ICatalogView;
@@ -30,10 +31,20 @@ export class MainPage extends Component<{}> implements IView {
 	basketIcon: HTMLElement;
 	basketCounter: HTMLElement;
 	basketItems: Map<string, { product: IProduct; count: number }> = new Map();
+	newOrder: IOrder;
 	private api: AppApi;
-	
+
 	constructor(container: HTMLElement, protected events: IEvents) {
 		super(container);
+		this.api = new AppApi(CDN_URL, API_URL);
+		this.newOrder = {
+			payment: 'card',
+			email: '',
+			phone: '',
+			address: '',
+			total: 0,
+			items: [],
+		};
 
 		this.catalogView = new CatalogView(
 			ensureElement<HTMLElement>('.gallery'),
@@ -65,10 +76,10 @@ export class MainPage extends Component<{}> implements IView {
 			ensureElement<HTMLElement>('#modal-container'),
 			events
 		);
-		// this.success = new SuccessView(
-		// 	ensureElement<HTMLElement>('#success-modal'),
-		// 	events
-		// );
+		this.success = new SuccessView(
+			ensureElement<HTMLElement>('#modal-container'),
+			events
+		);
 
 		// Обработчики событий между компонентами
 		this.setupEventHandlers();
@@ -92,34 +103,36 @@ export class MainPage extends Component<{}> implements IView {
 			this.basket.open();
 		});
 
-		this.events.on('basket:check', (data: { id: string, callback: (isInBasket: boolean) => void }) => {
-			data.callback(this.basketItems.has(data.id));
-	});
+		// Проверка, есть ли товар в корзине
+		this.events.on(
+			'basket:check',
+			(data: { id: string; callback: (isInBasket: boolean) => void }) => {
+				data.callback(this.basketItems.has(data.id));
+			}
+		);
 
 		// Добавление товаров в корзину
 		this.events.on('basket:add', (product: IProduct) => {
 			if (!product || this.basketItems.has(product.id)) return;
 
 			this.basketItems.set(product.id, {
-					product,
-					count: 1, // Всегда 1, так как нельзя добавить несколько одинаковых товаров
+				product,
+				count: 1, // Всегда 1, так как нельзя добавить несколько одинаковых товаров
 			});
 
 			this.updateBasketIcon();
 			this.events.emit('basket:changed', this.basketItems);
-	});
+		});
 
 		// Удаление товаров
-    this.events.on('basket:remove', (data: { id: string }) => {
+		this.events.on('basket:remove', (data: { id: string }) => {
 			this.basketItems.delete(data.id);
 			this.updateBasketIcon();
 			this.events.emit('basket:changed', this.basketItems);
-	});
-
+		});
 
 		// фиксируем изменения корзинки
 		this.events.on('basket:changed', () => {
-			console.log(this.basketItems)
 			this.basket.render({ basketItems: this.basketItems });
 		});
 
@@ -128,15 +141,19 @@ export class MainPage extends Component<{}> implements IView {
 			this.basket.close();
 			this.orderForm.render(data);
 			this.orderForm.open();
-	});
+		});
 
 		//  если все ок передаем orderData дальше открываем форму окнтактов
-		this.events.on('order:addContacts', (orderData) => {
-			console.log('Данные заказа:', orderData);
-			this.orderForm.close();
-			this.events.emit('contact:init');
-			this.contactsForm.open()
-		});
+		this.events.on(
+			'order:addContacts',
+			(orderData: { address: string; payment: PaymentMethod }) => {
+				this.newOrder.address = orderData.address;
+				this.newOrder.payment = orderData.payment;
+				this.orderForm.close();
+				this.events.emit('contact:init');
+				this.contactsForm.open();
+			}
+		);
 
 		// вводим контакты покупателя
 		this.events.on('contact:init', () => {
@@ -147,43 +164,43 @@ export class MainPage extends Component<{}> implements IView {
 			});
 			this.contactsForm.open();
 		});
-		
-		
 
-		this.events.on('contacts:submit', (contacts: { email: string, phone: string }) => {
-			try {
-					// Получаем данные из обеих форм
-					// const orderData = {
-					// 		payment: this.orderForm.method === 'card' ? 'online' : 'receipt',
-					// 		email: contacts.email,
-					// 		phone: contacts.phone,
-					// 		address: this.orderForm.address,
-					// 		total: this.calculateTotal(Array.from(this.basketItems.values())),
-					// 		items: Array.from(this.basketItems.keys()) // Только ID товаров
-					// };
-	
-					// console.log('Формируем заказ:', orderData); // Для отладки
-	
-					// // Отправка на сервер
-					// const response = this.api.postOrder(orderData);
-	
-					// // При успешной отправке
-					// this.events.emit('order:success', {
-					// 		total: orderData.total,
-					// 		orderId: response.id
-					// });
-					
-					// // Очищаем корзину
-					// this.basketItems.clear();
-					// this.updateBasketIcon();
-					
-			} catch (error) {
+		// полетел заказик
+		this.events.on(
+			'contacts:submit',
+			(contacts: { email: string; phone: string }) => {
+				this.newOrder.email = contacts.email;
+				this.newOrder.phone = contacts.phone;
+				this.newOrder.items = Array.from(this.basketItems.values()).map(
+					(item) => item.product.id
+				);
+				this.newOrder.total = this.calculateTotal(
+					Array.from(this.basketItems.values())
+				);
+
+				try {
+					// Отправка на сервер
+					const response = this.api.postOrder(this.newOrder);
+
+					// Закрываем форму контактов
+					this.contactsForm.close();
+
+					// Обновляем SuccessView и открываем его
+					this.success.render({ total: this.newOrder.total });
+					this.success.open();
+
+					// Очищаем корзину
+					this.basketItems.clear();
+					this.updateBasketIcon();
+
+					// Можно также эмитнуть событие успеха, если оно нужно другим компонентам
+					this.events.emit('order:success', { total: this.newOrder.total });
+				} catch (error) {
 					console.error('Ошибка оформления заказа:', error);
 					this.events.emit('order:error', error);
+				}
 			}
-	});
- 
-
+		);
 	}
 
 	render(): HTMLElement {

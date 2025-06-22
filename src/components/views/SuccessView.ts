@@ -1,27 +1,34 @@
-// // Успешный заказ
-// export class SuccessView extends Modal<number> implements ISuccessView {
-//   protected _total: HTMLElement;
-//   protected _closeButton: HTMLButtonElement;
-//   public total: number = 0;
+import { ISuccessView } from "../../types/views";
+import { successTemplate } from "../../utils/templates";
+import { ensureElement } from "../../utils/utils";
+import { IEvents } from "../base/events";
+import { AppModal } from "./Popup";
 
-//   constructor(container: HTMLElement, events: IEvents) {
-//     super(container, events);
-//     this._total = ensureElement<HTMLElement>('.order-success__description', this.content);
-//     this._closeButton = ensureElement<HTMLButtonElement>('.order-success__close', this.content);
-    
-//     this._closeButton.addEventListener('click', () => this.close());
-//   }
+export class SuccessView extends AppModal implements ISuccessView {
+  total: number; 
 
-//   render(data?: Partial<number>): HTMLElement {
-//     if (data !== undefined) {
-//       this.total = data;
-//       this.setText(this._total, `Списано ${this.total} синапсов`);
-//     }
-//     return this.container;
-//   }
+  constructor(container: HTMLElement, events: IEvents) {
+      super(container, events);
 
-//   setTotal(total: number): void {
-//     this.total = total;
-//     this.render(total);
-//   }
-// }
+  }
+
+  render(data: {total: number }) {
+    const content = successTemplate.content.cloneNode(
+      true
+    ) as DocumentFragment;
+    this.content.replaceChildren(content);
+
+    this.total = data.total
+  
+    const closeButton = ensureElement('.order-success__close', this.content);
+
+    this.setText(ensureElement('.order-success__description', this.content), `Списано ${this.total} синапсов`)
+
+    closeButton.addEventListener('click', () => {
+      this.close();
+      this.events.emit('order:reset');
+    })
+      
+      return this.container;
+  }
+}
