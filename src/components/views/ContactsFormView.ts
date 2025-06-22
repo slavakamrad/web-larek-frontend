@@ -113,10 +113,14 @@ export class ContactsFormView extends AppModal implements IContactsFormView {
     }
 
     private saveData(): void {
-        ContactsFormView.savedData = {
-            email: this.emailInput.value,
-            phone: this.phoneInput.value
-        };
+        if(this.emailInput && this.phoneInput){
+            ContactsFormView.savedData = {
+                email: this.emailInput.value,
+                phone: this.phoneInput.value
+            };
+
+        }
+     
     }
 
     close(): void {

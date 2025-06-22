@@ -36,8 +36,7 @@ export class OrderFormView extends AppModal implements IOrderFormView {
       this.addressInput = ensureElement<HTMLInputElement>('input[name="address"]', this.content);
       this.submitButton = ensureElement<HTMLButtonElement>('button[type="submit"]', this.content);
       this.errors = ensureElement<HTMLElement>('.form__errors', this.content);
-
-      // Восстанавливаем сохраненные данные
+      
       if (OrderFormView.savedData) {
           this.method = OrderFormView.savedData.payment;
           this.address = OrderFormView.savedData.address;
@@ -98,7 +97,7 @@ export class OrderFormView extends AppModal implements IOrderFormView {
   }
 
   close(): void {
-      this.saveData(); // Сохраняем данные перед закрытием
+      this.saveData(); 
       super.close();
   }
 }
