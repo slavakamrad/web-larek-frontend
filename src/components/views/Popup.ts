@@ -8,6 +8,8 @@ export interface IPopupData extends IProduct, IBasketView, IOrder, IFormState {
 	content: HTMLElement;
 }
 
+
+
 export class AppModal extends Component<IPopupData> implements IPopup {
 	_closeButton: HTMLButtonElement;
 	content: HTMLElement;

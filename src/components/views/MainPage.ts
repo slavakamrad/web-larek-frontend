@@ -8,12 +8,13 @@ import {
 	IOrderFormView,
 	IContactsFormView,
 	ISuccessView,
+	IPopupData,
 } from '../../types/views';
 import { CatalogView } from './CatalogView';
-import { OrderFormView } from './OrderFormView'; 
+import { OrderFormView } from './OrderFormView';
 // import { SuccessView } from './SuccessView';
 import { ensureElement } from '../../utils/utils';
-import { IProduct } from '../../types/data';
+import { IOrder, IProduct } from '../../types/data';
 import { ProductPreview } from './ProductPreview';
 import { BasketView } from './BasketView';
 import { ContactsFormView } from './ContactsFormView';
@@ -109,7 +110,7 @@ export class MainPage extends Component<{}> implements IView {
 
 		// Удаление товаров
 		this.events.on('basket:remove', (data: { id: string }) => {
-				const item = this.basketItems.get(data.id);
+			const item = this.basketItems.get(data.id);
 			if (!item) return;
 
 			if (item.count > 1) {
@@ -121,7 +122,7 @@ export class MainPage extends Component<{}> implements IView {
 			this.updateBasketIcon();
 			this.events.emit('basket:changed', this.basketItems);
 
-			if (this.basketItems.size === 0) {				
+			if (this.basketItems.size === 0) {
 				this.basket.open();
 			}
 		});
@@ -131,28 +132,30 @@ export class MainPage extends Component<{}> implements IView {
 			this.basket.render({ basketItems: this.basketItems });
 		});
 
-		// выбираем способ оплаты и адрес доставки
-		this.events.on('order:init', (data: { items: Array<{ product: IProduct; count: number }> }) => {
+		// открываем модалку для выбора способа оплаты и адреса доставки
+		this.events.on('order:init', (data: IOrder) => {
 			this.basket.close();
-			// this.orderForm.render({
-			// 		items: data.items,
-			// 		valid: false, // если используется валидация
-			// 		errors: [] // если есть ошибки
-			// });
+			this.orderForm.render(data);
 			this.orderForm.open();
 	});
 
+		//  если все ок передаем orderData дальше открываем форму окнтактов
+		this.events.on('order:addContacts', (orderData) => {
+			console.log('Данные заказа:', orderData);
+			this.orderForm.close();
+			this.events.emit('contact:init');
+			this.contactsForm.open()
+		});
 
 		// вводим контакты покупателя
 		this.events.on('contact:init', () => {
 			this.basket.close();
 			this.contactsForm.render({
-					valid: false,
-					errors: []
+				valid: false,
+				errors: [],
 			});
 			this.contactsForm.open();
-	});
-
+		});
 	}
 
 	render(): HTMLElement {

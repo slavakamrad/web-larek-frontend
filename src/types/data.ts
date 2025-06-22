@@ -21,7 +21,7 @@ export interface IProduct {
 }
 
 // Тип оплаты онлайн или при получении заказа
-export type PaymentMethod = 'offline' | 'online';
+export type PaymentMethod = 'cash' | 'card';
 
 // Интерфейс заказа
 export interface IOrder {

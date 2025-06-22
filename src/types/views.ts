@@ -38,7 +38,7 @@ export interface IOrderFormView extends IPopup {
   address: string;
   submitButton: HTMLButtonElement;
   errors: HTMLElement;
-  render(state: IPopupData): HTMLElement;
+  render(state: IOrder): HTMLElement;
 }
 
 // Интерфейс формы контактов (шаг 2 - email/телефон)

@@ -46,6 +46,7 @@ export class BasketView extends AppModal implements IBasketView {
 		    `;
 
 			const deleteBtn = item.querySelector('.basket__item-delete');
+			
 			deleteBtn?.addEventListener('click', () => {
 				this.events.emit('basket:remove', { id });
 			});
@@ -54,9 +55,7 @@ export class BasketView extends AppModal implements IBasketView {
 			total += product.price * count;
 
 			this.button.addEventListener('click', () => {
-				this.events.emit('order:init', {
-					items: Array.from(data.basketItems.values()),
-				});
+				this.events.emit('order:init')
 			});
 		});
 
