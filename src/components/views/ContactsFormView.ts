@@ -23,8 +23,7 @@ export class ContactsFormView extends AppModal implements IContactsFormView {
         this.phoneInput = ensureElement<HTMLInputElement>('input[name="phone"]', this.content);
         this.submitButton = ensureElement<HTMLButtonElement>('button[type="submit"]', this.content);
         this.errors = ensureElement<HTMLElement>('.form__errors', this.content);
-
-        // Восстанавливаем сохраненные данные
+        
         if (ContactsFormView.savedData) {
             this.emailInput.value = ContactsFormView.savedData.email;
             this.phoneInput.value = ContactsFormView.savedData.phone;
@@ -53,7 +52,7 @@ export class ContactsFormView extends AppModal implements IContactsFormView {
                     phone: this.phoneInput.value
 
                 });
-                ContactsFormView.savedData = null; // Сбрасываем после успешной отправки
+                ContactsFormView.savedData = null; 
             }
         });
 

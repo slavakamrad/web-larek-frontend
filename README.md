@@ -89,196 +89,196 @@ src/types/
 ├── events.ts      # Система событий приложения
 └── models.ts      # Модели ICatalogModel, IBasketModel, IOrderModel 
 ```
-### Данные (data.ts)
-#### Основные сущности:
 
-```typescript   
+#### Основные сущности:
+## Главные компоненты
+
+### MainPage (views/MainPage.ts)
+
+Центральный компонент приложения, который:
+- Инициализирует все представления
+- Координирует взаимодействие между компонентами
+- Управляет состоянием корзины и заказа
+- Обрабатывает основные события приложения
+
+### Модели
+
+#### CatalogModel (models/CatalogModel.ts)
+- Хранит список товаров
+- Управляет состоянием превью товара
+- Эмитит события при изменении данных
+
+#### AppApi (models/AppApi.ts)
+- Обеспечивает взаимодействие с API
+- Загружает список товаров
+- Отправляет заказы на сервер
+
+### Представления
+
+#### CatalogView (views/CatalogView.ts)
+- Отображает список товаров
+- Обрабатывает клики по товарам
+- Поддерживает состояние загрузки
+
+#### ProductPreview (views/ProductPreview.ts)
+- Показывает детальную информацию о товаре
+- Позволяет добавлять/удалять товары из корзины
+
+#### BasketView (views/BasketView.ts)
+- Отображает содержимое корзины
+- Показывает итоговую сумму
+- Обрабатывает удаление товаров
+- Инициирует оформление заказа
+
+#### OrderFormView (views/OrderFormView.ts)
+- Форма выбора способа оплаты и адреса доставки
+- Валидация введенных данных
+
+#### ContactsFormView (views/ContactsFormView.ts)
+- Форма ввода контактных данных
+- Валидация email и телефона
+
+#### SuccessView (views/SuccessView.ts)
+- Сообщение об успешном оформлении заказа
+- Показывает итоговую сумму
+
+## Структура типизации
+
+### Данные (data.ts)
+
+```typescript
 interface IProduct {
-  id: string;               // UUID товара
-  description: string;      // Описание
-  image: string;            // URL изображения
-  title: string;            // Название  
-  category: ProductCategory; // Категория из строго типизированного набора
-  price: number | null;     // Цена (может отсутствовать)
+  id: string;
+  description: string;
+  image: string;
+  title: string;
+  category: ProductCategory;
+  price: number | null;
 }
+
 interface IOrder {
-  payment: PaymentMethod;   // 'online' | 'offline'
-  email: string;            // Email покупателя
-  phone: string;            // Телефон
-  address: string;          // Адрес доставки
-  total: number;            // Итоговая сумма
-  items: string[];          // Массив ID товаров
+  payment: PaymentMethod;
+  email: string;
+  phone: string;
+  address: string;
+  total: number;
+  items: string[];
 }
 ```
 
 ### API слой (api.ts)
-#### Ключевые интерфейсы:
 
-```typescript   
-interface IApi {
-  baseUrl: string; // Базовый URL
-  options: RequestInit; // Настройки подключения
-  handleResponse(response: Response): Promise<object>; // Защищенный метод. Принимает Response. Возвращает    Promise<object>. 
-  get(uri: string): Promise<object>; // GET запрос к URI. Принимает строку. Возвращает Promise<object>. 
-  post(uri: string, data: object, method: string): Promise<object> // POST запрос. Принимает строку URI и возвращает промис с данными ответа.
-}
-interface IContactsOrder {
-  email: string; // Email покупателя
-  phone: string; // Номер телефона покупателя
-  payment: PaymentMethod; // 'online' | 'offline'
-  address: string; // Адрес покупателя
-  validate(email: string, phone: string, address: string): boolean; // валидация формы
-}
-interface IOrderResponse {
-  success: boolean; // ответ успешный или нет
-  total?: number; // если успешный ответ то сумма
-  id?: string; // если успешный ответ то id
-  error?: string; // если не успешный ответ то текст ошибки
+```typescript
+interface IAppAPI {
+  readonly imageUrl: string;
+  getProductsList(): Promise<IProduct[]>;
+  getProductItem(id: string): Promise<IProduct>;
+  postOrder(order: IOrder): Promise<IOrder>;
 }
 ```
 
 ### Модели (models.ts)
-#### Структура моделей
 
 ```typescript
 interface ICatalogModel {
-  items: IProduct[]; // Array всех товаров
-  setItems(items: IProduct[]): void; // обновление товаров
-  getItems(): IProduct[];        // получение товаров
-  getItem(id: string): IProduct; // получение товара по id
+  items: IProduct[];
+  setItems(items: IProduct[]): void;
+  getItems(): IProduct[];
+  getItem(id: string): IProduct;
 }
-interface IBasketModel {
-  items: Map<string, number>;         // массив товаров в корзине
-  add(id: string): void;              // метод добавления товаров в корзину
-  remove(id: string): void;           // метод удаления товаров из корзины
-  getCartValue(cost: number): number; // метод получения итоговой стоиомсти товаров
-  clear(): void;                      // очистка корзины
-}
-interface IOrderModel {
-  payment: PaymentMethod;       // текущий способ оплаты
-  address: string;             // адрес доставки
-  email: string;               // email пользователя
-  phone: string;               // телефон пользователя
-  items: string[];             // массив ID товаров в заказе
-  total: number;               // итоговая сумма заказа
-  updateField<K extends keyof IOrder>(field: K, value: IOrder[K]): void; // Обновляет конкретное поле заказа, все поля заказа уже объединены в IOrder  
-  validate(): { isValid: boolean; errors: FormErrors }; // валидация
-  getOrderData(): IOrder; // метод получения всех данных для отправки заказа на сервер
-}
-
 ```
 
 ### Представления (views.ts)
-#### Компонентная структура:
 
-```typescript          
-interface IView<T = unknown> {    // Интерфейс Базовое view
-  render(data?: T): HTMLElement;  // рендер элементов
+```typescript
+interface IView<T = unknown> {
+  render(data?: T): HTMLElement;
 }
 
-interface ICatalogView extends IView<IProduct[]> {        // view каталога товаров, расширяется за счет базового IView
-  itemClick(handler: (product: IProduct) => void): void;  // обработчик клика по товару
-  setLoading(loading: boolean): void; // метод для обновления состояния загрузки товаров в каталог
-}       
-        
-interface IPopup extends IView {             // view модального окна, расширяется за счет базового IView 
-  content: HTMLElement;                      // Контейнер содержимого модалки
-  closeButton: HTMLButtonElement;            // Кнопка закрытия
-  open(): void;                              // Открывает модальное окно
-  close(): void;                             // Закрывает модальное окно
-  handleESC(evt: KeyboardEvent): void;       // Обрабатывает нажатие ESC 
+interface ICatalogView extends IView<IProduct[]> {
+  itemClick(handler: (product: IProduct) => void): void;
+  setLoading(loading: boolean): void;
 }
 
-interface IProductPreview extends IPopup { // view попапа превью товара
-  addToCart(handler: () => void): void;    // обработчик добавления в корзину
+interface IPopup extends IView {
+  content: HTMLElement;
+  closeButton: HTMLButtonElement;
+  open(): void;
+  close(): void;
+  handleESC(evt: KeyboardEvent): void;
 }
 
-interface IBasketView extends IPopup {   // view попапа корзины, расширяется за счет базового IPopup
-  update(items: Map<string, { product: IProduct, count: number }>): void;  // Обновляет список товаров в корзине
-  deleteItem(handler: (id: string) => void): void;  // обработчик удаления товара
-  basketButton: HTMLButtonElement;                  // Кнопка оформления заказа
-  onSubmit(callback: () => void): void;             // обработчик кнопки оформления товара
+interface IProductPreview extends IPopup {
+  button: HTMLButtonElement;
+  currentProduct: IProduct;
 }
 
-interface IOrderFormView extends IPopup { // view модального окна формы заказа (шаг 1 - оплата/адрес), расширяется за счет базового IPopup
-  method: PaymentMethod;                  // способ оплаты
-  address: string;                        // адрес доставки
-  submitButton: HTMLButtonElement;        // кнопка для продолжения оформления заказа
-  errors: HTMLElement;                    // блок отображения ошибок
-  render(state: IFormState): HTMLElement; // рендер формы с учетом состояния
-  onSubmit(callback: () => void): void;   // обработчик кнопки для продолжения оформления товара
+interface IBasketView extends IPopup {
+  basketItems: Map<string, { product: IProduct; count: number }>;
 }
 
-interface IContactsFormView extends IPopup { //  view модального окна формы контактов (шаг 2 - email/телефон), расширяется за счет базового IPopup
-  email: string;                          // почта
-  phone: string;                          // телефон
-  submitButton: HTMLButtonElement;        // кнопка для продолжения оформления заказа
-  errors: HTMLElement;                    // блок отображения ошибок
-  render(state: IFormState): HTMLElement; // рендер формы с учетом состояния
-  onSubmit(callback: () => void): void;   // обработчик кнопки для продолжения оформления товара
+interface IOrderFormView extends IPopup {
+  method: PaymentMethod;
+  address: string;
+  submitButton: HTMLButtonElement;
+  errors: HTMLElement;
+  render(state: IOrder): HTMLElement;
 }
 
-interface ISuccessView extends IPopup {  // view попапа успешного заказа, расширяется за счет базового IPopup
-  total: number;                         // итоговая сумма
-  setTotal(total: number): void;         // метод для установки итоговой суммы
+interface IContactsFormView extends IPopup {
+  emailInput: HTMLInputElement;
+  phoneInput: HTMLInputElement;
+  submitButton: HTMLButtonElement;
+  errors: HTMLElement;
+  render(state: IFormState): HTMLElement;
 }
 
-interface IFormState { // Интерфейс состояния формы
-  valid: boolean;      // валидна ли форма
-  errors: string[];    // список ошибок
+interface ISuccessView extends IPopup {
+  total: number;
 }
-
-type FormErrors = Partial<Record<keyof IOrder, string>>; // Типизация ошибок в форме
 ```
+
 ## Система событий
 
-Проект использует EventEmitter для взаимодействия между компонентами: 
-
 ### Каталог товаров
-| Событие               | Данные                          | Описание |
-|-----------------------|---------------------------------|----------|
-| `Catalog:itemsUpdated`| `IProduct[]`                   | Обновление списка товаров |
-| `Catalog:loading`     | `boolean`                      | Статус загрузки данных |
-| `Catalog:itemClick`   | `IProduct`                     | Клик по товару в каталоге |
+| Событие          | Данные              | Описание |
+|------------------|---------------------|----------|
+| `items:changed`  | `{ items: IProduct[] }` | Обновление списка товаров |
 
 ### Превью товара
-| Событие               | Данные                          | Описание |
-|-----------------------|---------------------------------|----------|
-| `ProductPreview:add`  | `{ id: string }`        | Добавление товара из превью в корзину |
-| `ProductPreview:open` | `IProduct`                     | Открытие превью товара |
-| `ProductPreview:close`| `-`                            | Закрытие превью товара |
+| Событие          | Данные              | Описание |
+|------------------|---------------------|----------|
+| `basket:add`     | `IProduct`          | Добавление товара в корзину |
+| `basket:remove`  | `{ id: string }`    | Удаление товара из корзины |
+| `basket:check`   | `{ id: string, callback }` | Проверка наличия товара в корзине |
 
 ### Корзина
-| Событие               | Данные                          | Описание |
-|-----------------------|---------------------------------|----------|
-| `Basket:itemsUpdated` | `Map<string, { product: IProduct, count: number }>` | Обновление состава корзины |
-| `Basket:itemRemoved`  | `{ id: string }`        | Удаление товара из корзины |
-| `Basket:checkout`     | `-`                            | Инициация оформления заказа |
-| `Basket:open`         | `-`                            | Открытие корзины |
-| `Basket:close`        | `-`                            | Закрытие корзины |
+| Событие          | Данные              | Описание |
+|------------------|---------------------|----------|
+| `basket:changed` | `Map<string, { product, count }>` | Изменение состава корзины |
+| `order:init`     | `IOrder`            | Инициация оформления заказа |
 
 ### Формы заказа
 #### Шаг 1 (Оплата/Адрес)
-| Событие               | Данные                          | Описание |
-|-----------------------|---------------------------------|----------|
-| `OrderForm:paymentChanged` | `PaymentMethod`           | Изменение способа оплаты |
-| `OrderForm:addressChanged` | `string`                 | Изменение адреса доставки |
-| `OrderForm:submit`    | `{ payment: PaymentMethod, address: string }` | Отправка формы |
+| Событие          | Данные              | Описание |
+|------------------|---------------------|----------|
+| `order:addContacts` | `{ payment, address }` | Отправка формы |
 
 #### Шаг 2 (Контактные данные)
-| Событие               | Данные                          | Описание |
-|-----------------------|---------------------------------|----------|
-| `ContactsForm:emailChanged` | `string`                 | Изменение email |
-| `ContactsForm:phoneChanged` | `string`                 | Изменение телефона |
-| `ContactsForm:submit` | `{ email: string, phone: string }` | Отправка формы |
+| Событие          | Данные              | Описание |
+|------------------|---------------------|----------|
+| `contacts:submit` | `{ email, phone }` | Отправка формы |
+| `contact:init`   | -                   | Инициализация формы контактов |
 
 ### Успешный заказ
-| Событие               | Данные                          | Описание |
-|-----------------------|---------------------------------|----------|
-| `Success:viewClosed`  | `{ total: number }`            | Закрытие окна успешного заказа |
+| Событие          | Данные              | Описание |
+|------------------|---------------------|----------|
+| `order:success`  | `{ total }`         | Успешное оформление заказа |
+| `order:reset`    | -                   | Сброс состояния заказа |
 
-### Общие события
-| Событие               | Данные                          | Описание |
-|-----------------------|---------------------------------|----------|
-| `App:orderCompleted`  | `{ orderId: string, total: number }` | Успешное оформление заказа |
-| `App:error`           | `{ message: string }`          | Произошла ошибка |
+### Модальные окна
+| Событие          | Данные              | Описание |
+|------------------|---------------------|----------|
+| `modal:open`     | `HTMLElement`       | Открытие модального окна |
+| `modal:close`    | `HTMLElement`       | Закрытие модального окна |
+```

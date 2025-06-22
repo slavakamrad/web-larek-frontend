@@ -26,7 +26,7 @@ export class SuccessView extends AppModal implements ISuccessView {
 
     closeButton.addEventListener('click', () => {
       this.close();
-      this.events.emit('order:reset');
+ 
     })
       
       return this.container;

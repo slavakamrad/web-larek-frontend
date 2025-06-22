@@ -8,7 +8,6 @@ import {
 	IOrderFormView,
 	IContactsFormView,
 	ISuccessView,
-	IPopupData,
 } from '../../types/views';
 import { CatalogView } from './CatalogView';
 import { OrderFormView } from './OrderFormView';
@@ -195,6 +194,18 @@ export class MainPage extends Component<{}> implements IView {
 
 					// Можно также эмитнуть событие успеха, если оно нужно другим компонентам
 					this.events.emit('order:success', { total: this.newOrder.total });
+					
+					// Обнуляем заказик
+					this.newOrder = {
+						payment: 'card',
+						email: '',
+						phone: '',
+						address: '',
+						total: 0,
+						items: []
+					}; 
+ 
+  
 				} catch (error) {
 					console.error('Ошибка оформления заказа:', error);
 					this.events.emit('order:error', error);
