@@ -23,7 +23,7 @@ export class SuccessView extends AppModal implements ISuccessView {
     const closeButton = ensureElement('.order-success__close', this.content);
 
     this.setText(ensureElement('.order-success__description', this.content), `Списано ${this.total} синапсов`)
-
+    
     closeButton.addEventListener('click', () => {
       this.close();
  
