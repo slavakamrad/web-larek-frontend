@@ -24,6 +24,7 @@ export class OrderFormView extends AppModal implements IOrderFormView {
         });
         this.validateForm();
     }
+    
 
     render(state?: Partial<IOrder>): HTMLElement {
         const content = orderTemplate.content.cloneNode(true) as DocumentFragment;
@@ -68,10 +69,10 @@ export class OrderFormView extends AppModal implements IOrderFormView {
         this.submitButton.addEventListener('click', (e) => {
             e.preventDefault();
             if (this.validateForm()) {
-                this.events.emit('order:addContacts', {
+                this.events.emit('order:submit', {
                     payment: this.method,
-                    address: this.address,                     
-                } as IOrder);
+                    address: this.address
+                });
                 OrderFormView.savedData = null;
             }
         });
@@ -118,4 +119,6 @@ export class OrderFormView extends AppModal implements IOrderFormView {
         this.saveData(); 
         super.close();
     }
+
+    
 }
