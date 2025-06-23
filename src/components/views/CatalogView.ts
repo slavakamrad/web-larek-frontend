@@ -20,6 +20,7 @@ export class CatalogView extends Component<IProduct[]> implements ICatalogView {
 
   constructor(container: HTMLElement, protected events: IEvents) {
     super(container);
+    this.itemClick((product) => events.emit('catalog:item-click', product));
   }
 
   // Сеттер для продуктов

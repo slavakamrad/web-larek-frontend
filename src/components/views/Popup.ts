@@ -9,7 +9,6 @@ export interface IPopupData extends IProduct, IBasketView, IOrder, IFormState, I
 }
 
 
-
 export class AppModal extends Component<IPopupData> implements IPopup {
 	_closeButton: HTMLButtonElement;
 	content: HTMLElement;
@@ -17,20 +16,21 @@ export class AppModal extends Component<IPopupData> implements IPopup {
 	constructor(container: HTMLElement, protected events: IEvents) {
 		super(container);
 
-		this._closeButton = document.querySelector('.modal__close');
-		this.content = document.querySelector('.modal__content');
-		this._closeButton.addEventListener('click', this.close.bind(this));
+		this._closeButton = this.container.querySelector('.modal__close');
+		this.content = this.container.querySelector('.modal__content');
+		
+		this._closeButton?.addEventListener('click', this.close.bind(this));
 		this.container.addEventListener('click', this.close.bind(this));
-		this.content.addEventListener('click', (evt) => evt.stopPropagation());
+		this.content?.addEventListener('click', (evt) => evt.stopPropagation());
 	}
 
 	get closeButton(): HTMLButtonElement {
 		return this._closeButton;
 	}
 
-	open(): void {
-		this.container.classList.add('modal_active');
-		this.events.emit('modal:open', this.container);
+	open(): void {	
+    this.container.classList.add('modal_active');
+    this.events.emit('modal:open', this.container);
 	}
 
 	close(): void {
