@@ -18,7 +18,7 @@ export class AppModal extends Component<IPopupData> implements IPopup {
 
 		this._closeButton = this.container.querySelector('.modal__close');
 		this.content = this.container.querySelector('.modal__content');
-		
+
 		this._closeButton?.addEventListener('click', this.close.bind(this));
 		this.container.addEventListener('click', this.close.bind(this));
 		this.content?.addEventListener('click', (evt) => evt.stopPropagation());
@@ -28,9 +28,9 @@ export class AppModal extends Component<IPopupData> implements IPopup {
 		return this._closeButton;
 	}
 
-	open(): void {	
-    this.container.classList.add('modal_active');
-    this.events.emit('modal:open', this.container);
+	open(): void {
+		this.container.classList.add('modal_active');
+		this.events.emit('modal:open', this.container);
 	}
 
 	close(): void {

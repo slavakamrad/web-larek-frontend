@@ -9,9 +9,9 @@ export class CatalogModel implements ICatalogModel {
 
   constructor(
     protected events: EventEmitter
-  ) {}
+  ) { }
 
-	items: IProduct[];
+  items: IProduct[];
 
   setItems(items: IProduct[]): void {
     this._items = items;
@@ -19,9 +19,9 @@ export class CatalogModel implements ICatalogModel {
   }
 
   setItem(item: IProduct): void {
-		this.preview = item.id;
-		this.events.emit('preview:change', item);
-	}
+    this.preview = item.id;
+    this.events.emit('preview:change', item);
+  }
 
   getItems(): IProduct[] {
     return this._items;

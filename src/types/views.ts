@@ -24,7 +24,7 @@ export interface IPopup extends IView {
 // Интерфейс попапа превью товара
 export interface IProductPreview extends IPopup {
   button: HTMLButtonElement;
-  currentProduct: IProduct; 
+  currentProduct: IProduct;
 }
 
 // Интерфейс попапа корзины
@@ -48,7 +48,7 @@ export interface IContactsFormView extends IPopup {
   submitButton: HTMLButtonElement;
   errors: HTMLElement;
   render(state: IFormState): HTMLElement;
-  
+
 }
 
 // Попап успешного заказа

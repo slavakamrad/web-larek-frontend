@@ -23,7 +23,7 @@ export class ContactsFormView extends AppModal implements IContactsFormView {
         this.phoneInput = ensureElement<HTMLInputElement>('input[name="phone"]', this.content);
         this.submitButton = ensureElement<HTMLButtonElement>('button[type="submit"]', this.content);
         this.errors = ensureElement<HTMLElement>('.form__errors', this.content);
-        
+
         if (ContactsFormView.savedData) {
             this.emailInput.value = ContactsFormView.savedData.email;
             this.phoneInput.value = ContactsFormView.savedData.phone;
@@ -47,12 +47,12 @@ export class ContactsFormView extends AppModal implements IContactsFormView {
             e.preventDefault();
             if (this.validateForm()) {
                 this.events.emit('contacts:submit', {
-                    
+
                     email: this.emailInput.value,
                     phone: this.phoneInput.value
 
                 });
-                ContactsFormView.savedData = null; 
+                ContactsFormView.savedData = null;
             }
         });
 
@@ -66,20 +66,20 @@ export class ContactsFormView extends AppModal implements IContactsFormView {
     private validateForm(): boolean {
         this.errors.innerHTML = '';
         const errors: string[] = [];
-        
+
         // Валидация email
         if (!this.emailInput.value) {
             errors.push('Необходимо указать email');
         } else if (!this.validateEmail(this.emailInput.value)) {
             errors.push('Некорректный email');
         }
-        
+
         // Валидация телефона
         if (!this.phoneInput.value) {
             errors.push('Необходимо указать телефон');
         } else if (!this.validatePhone(this.phoneInput.value)) {
             errors.push('Некорректный формат номера телефона');
-        }   
+        }
 
         if (errors.length) {
             this.showErrors(errors);
@@ -112,14 +112,14 @@ export class ContactsFormView extends AppModal implements IContactsFormView {
     }
 
     private saveData(): void {
-        if(this.emailInput && this.phoneInput){
+        if (this.emailInput && this.phoneInput) {
             ContactsFormView.savedData = {
                 email: this.emailInput.value,
                 phone: this.phoneInput.value
             };
 
         }
-     
+
     }
 
     close(): void {

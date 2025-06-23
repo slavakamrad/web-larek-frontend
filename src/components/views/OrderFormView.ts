@@ -24,7 +24,7 @@ export class OrderFormView extends AppModal implements IOrderFormView {
         });
         this.validateForm();
     }
-    
+
 
     render(state?: Partial<IOrder>): HTMLElement {
         const content = orderTemplate.content.cloneNode(true) as DocumentFragment;
@@ -83,7 +83,7 @@ export class OrderFormView extends AppModal implements IOrderFormView {
     private validateForm(): boolean {
         this.errors.innerHTML = '';
         const errors: string[] = [];
-        
+
         if (!this.address) {
             errors.push('Необходимо указать адрес доставки');
         }
@@ -116,9 +116,9 @@ export class OrderFormView extends AppModal implements IOrderFormView {
     }
 
     close(): void {
-        this.saveData(); 
+        this.saveData();
         super.close();
     }
 
-    
+
 }

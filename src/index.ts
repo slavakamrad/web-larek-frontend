@@ -34,8 +34,8 @@ const successView = new SuccessView(ensureElement<HTMLElement>('#modal-container
 
 // Загрузка товаров
 api.getProductsList()
-    .then(catalogModel.setItems.bind(catalogModel))
-    // .catch((err) => console.error(err));
+  .then(catalogModel.setItems.bind(catalogModel))
+  .catch((err) => console.error(err));
 
 // Обработчики событий
 // Рендер каталога
@@ -43,20 +43,24 @@ events.on('items:changed', () => {
   catalogView.render(catalogModel.getItems());
 });
 
+// При клике на товар в каталоге открываем превью
 events.on('catalog:item-click', (product: IProduct) => {
   productPreview.render(product);
   productPreview.open();
 });
 
+// Обработчик клика на иконку корзины
 events.on('basket:open', () => {
   basketView.render({ basketItems: basketModel.items });
   basketView.open();
 });
 
+// Добавление товаров в корзину
 events.on('basket:add', (product: IProduct) => {
   basketModel.addItem(product);
 });
 
+// Удаление товаров
 events.on('basket:remove', (data: { id: string }) => {
   basketModel.removeItem(data.id);
 });
@@ -71,38 +75,42 @@ events.on('basket:check', (data: { id: string; callback: (isInBasket: boolean) =
 });
 
 // Обработчики для оформления заказа
+// выбор оплаты и ввод адреса
 events.on('order:init', () => {
   orderForm.render({
-      payment: 'card',
-      address: ''
+    payment: 'card',
+    address: ''
   });
   orderForm.open();
 });
 
+//  если все ок передаем orderData дальше открываем форму окнтактов
 events.on('order:submit', (orderData: { address: string; payment: PaymentMethod }) => {
   contactsForm.render({
-      valid: false,
-      errors: []
+    valid: false,
+    errors: []
   });
   contactsForm.open();
 });
 
+// вводим контакты покупателя
 events.on('contacts:submit', (contacts: { email: string; phone: string }) => {
   const order: IOrder = {
-      ...contacts,
-      address: orderForm.address,
-      payment: orderForm.method,
-      items: basketModel.getItemsIds(),
-      total: basketModel.getTotal()
+    ...contacts,
+    address: orderForm.address,
+    payment: orderForm.method,
+    items: basketModel.getItemsIds(),
+    total: basketModel.getTotal()
   };
 
+  // полетел заказик
   api.postOrder(order)
-      .then(() => {
-          basketModel.clear();
-          successView.render({ total: order.total });
-      })
-      .catch((err) => {
-          console.error('Ошибка оформления заказа:', err);
-          events.emit('order:error', err);
-      });
+    .then(() => {
+      basketModel.clear();
+      successView.render({ total: order.total });
+    })
+    .catch((err) => {
+      console.error('Ошибка оформления заказа:', err);
+      events.emit('order:error', err);
+    });
 });

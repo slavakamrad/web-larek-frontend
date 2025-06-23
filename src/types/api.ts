@@ -3,11 +3,11 @@ import { PaymentMethod } from './data';
 
 // Интерфейс для api
 export interface IApi {
-	baseUrl: string;
-	options: RequestInit;
-	handleResponse(response: Response): Promise<object>;
-	get(uri: string): Promise<object>;
-	post(uri: string, data: object, method: string): Promise<object>
+  baseUrl: string;
+  options: RequestInit;
+  handleResponse(response: Response): Promise<object>;
+  get(uri: string): Promise<object>;
+  post(uri: string, data: object, method: string): Promise<object>
 }
 
 // Данные заказа для API
@@ -27,6 +27,5 @@ export interface IOrderResponse {
   error?: string;
 }
 
- 
 
- 
+

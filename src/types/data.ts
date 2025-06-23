@@ -2,7 +2,7 @@
 // Типизация данных
 
 // категории товаров как тип
-export type ProductCategory = 
+export type ProductCategory =
   | 'софт-скил'
   | 'другое'
   | 'дополнительное'
@@ -17,7 +17,7 @@ export interface IProduct {
   image: string;
   title: string;
   category: ProductCategory;
-  price: number | null;  
+  price: number | null;
 }
 
 // Тип оплаты онлайн или при получении заказа

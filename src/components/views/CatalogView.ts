@@ -29,16 +29,16 @@ export class CatalogView extends Component<IProduct[]> implements ICatalogView {
     this._items = items.map(item => {
       const element = cardCatalogTemplate.content.cloneNode(true) as DocumentFragment;
       const card = element.querySelector('.card') as HTMLElement;
-      
+
       this.setText(ensureElement('.card__title', card), item.title);
       this.setText(ensureElement('.card__price', card), item.price ? `${item.price} синапсов` : "Бесценно");
       this.setImage(ensureElement<HTMLImageElement>('.card__image', card), item.image);
-      const category = ensureElement('.card__category', card);     
+      const category = ensureElement('.card__category', card);
       const categoryName = this.categoryNames[item.category]
       category.className = `card__category card__category_${categoryName}`;
 
       category.textContent = item.category;
-      
+
       return card;
     });
   }

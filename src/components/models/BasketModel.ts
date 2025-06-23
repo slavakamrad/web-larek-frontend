@@ -4,7 +4,7 @@ import { EventEmitter } from "../base/events";
 export class BasketModel {
     private _items: Map<string, { product: IProduct; count: number }> = new Map();
 
-    constructor(protected events: EventEmitter) {}
+    constructor(protected events: EventEmitter) { }
 
     get items() {
         return this._items;
