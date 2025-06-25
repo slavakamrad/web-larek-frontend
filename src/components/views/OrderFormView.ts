@@ -1,124 +1,77 @@
-import { IOrder, PaymentMethod } from '../../types/data';
-import { IOrderFormView } from '../../types/views';
-import { orderTemplate } from '../../utils/templates';
+import { Component } from '../base/component';
 import { ensureElement } from '../../utils/utils';
 import { IEvents } from '../base/events';
-import { AppModal } from './Popup';
+import { IOrder } from '../../types/data';
+import { IOrderFormView } from '../../types/views';
 
-export class OrderFormView extends AppModal implements IOrderFormView {
-    paymentButtons: HTMLButtonElement[];
-    addressInput: HTMLInputElement;
+export class OrderFormView extends Component<IOrder> implements IOrderFormView {
     submitButton: HTMLButtonElement;
+    addressInput: HTMLInputElement;
     errors: HTMLElement;
-    method: PaymentMethod = "card";
-    address: string = '';
-    static savedData: { payment: PaymentMethod, address: string } | null = null;
+    paymentButtons: HTMLButtonElement[]; 
+    selectedPayment: string | null = null;
 
-    constructor(container: HTMLElement, events: IEvents) {
-        super(container, events);
-    }
-
-    updatePaymentSelection() {
-        this.paymentButtons.forEach((button) => {
-            button.classList.toggle('button_alt-active', button.name === this.method);
-        });
-        this.validateForm();
-    }
+    constructor(container: HTMLElement, protected events: IEvents) {
+        super(container);
 
 
-    render(state?: Partial<IOrder>): HTMLElement {
-        const content = orderTemplate.content.cloneNode(true) as DocumentFragment;
-        this.content.replaceChildren(content);
-
-        this.paymentButtons = [
-            ensureElement<HTMLButtonElement>('button[name="card"]', this.content),
-            ensureElement<HTMLButtonElement>('button[name="cash"]', this.content),
-        ];
-        this.addressInput = ensureElement<HTMLInputElement>('input[name="address"]', this.content);
-        this.submitButton = ensureElement<HTMLButtonElement>('button[type="submit"]', this.content);
-        this.errors = ensureElement<HTMLElement>('.form__errors', this.content);
-
-        if (OrderFormView.savedData) {
-            this.method = OrderFormView.savedData.payment;
-            this.address = OrderFormView.savedData.address;
-            this.addressInput.value = OrderFormView.savedData.address;
-        } else if (state) {
-            this.method = state.payment || "card";
-            this.address = state.address || '';
-            this.addressInput.value = state.address || '';
-        }
-
-        this.updatePaymentSelection();
-        this.validateForm();
-
-        this.paymentButtons.forEach((button) => {
-            button.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.method = button.name as PaymentMethod;
-                this.updatePaymentSelection();
-                this.saveData();
+        this.submitButton = ensureElement<HTMLButtonElement>('button[type="submit"]', container);
+        this.addressInput = ensureElement<HTMLInputElement>('input[name="address"]', container);
+        this.errors = ensureElement<HTMLElement>('.form__errors', container);
+        this.paymentButtons = Array.from(container.querySelectorAll('.button_alt')); 
+        this.addressInput.addEventListener('input', () => this.validateForm());
+        this.paymentButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                this.selectPayment(button.name);  
+                this.validateForm();
             });
-        });
-
-        this.addressInput.addEventListener('input', () => {
-            this.address = this.addressInput.value.trim();
-            this.validateForm();
-            this.saveData();
         });
 
         this.submitButton.addEventListener('click', (e) => {
             e.preventDefault();
-            if (this.validateForm()) {
-                this.events.emit('order:submit', {
-                    payment: this.method,
-                    address: this.address
-                });
-                OrderFormView.savedData = null;
-            }
-        });
-
-        return this.container;
-    }
-
-    private validateForm(): boolean {
-        this.errors.innerHTML = '';
-        const errors: string[] = [];
-
-        if (!this.address) {
-            errors.push('Необходимо указать адрес доставки');
-        }
-
-        if (errors.length) {
-            this.showErrors(errors);
-            this.submitButton.disabled = true;
-            return false;
-        }
-
-        this.submitButton.disabled = false;
-        return true;
-    }
-
-    private showErrors(errors: string[]): void {
-        this.errors.innerHTML = '';
-        errors.forEach(error => {
-            const errorElement = document.createElement('p');
-            errorElement.className = 'form__error';
-            errorElement.textContent = error;
-            this.errors.appendChild(errorElement);
+            this.submitForm();
         });
     }
 
-    saveData(): void {
-        OrderFormView.savedData = {
-            payment: this.method,
-            address: this.address
-        };
+    selectPayment(method: string) {
+        this.selectedPayment = method;
+        this.paymentButtons.forEach(button => {
+            button.classList.toggle('button_alt-active', button.name === method);
+        });
     }
 
-    close(): void {
-        this.saveData();
-        super.close();
+    validateForm() {
+        const hasAddress = this.addressInput.value.trim().length > 0;
+        const hasPayment = this.selectedPayment !== null;
+        
+        let errorMessage = '';
+        
+        if (!hasPayment && !hasAddress) {
+            errorMessage = 'Выберите способ оплаты и введите адрес доставки';
+        } else if (!hasPayment) {
+            errorMessage = 'Выберите способ оплаты';
+        } else if (!hasAddress) {
+            errorMessage = 'Введите адрес доставки';
+        }
+        
+        this.setText(this.errors, errorMessage);
+        this.submitButton.disabled = !hasPayment || !hasAddress;
     }
 
+    submitForm() {
+        if (!this.selectedPayment) {
+            this.setText(this.errors, 'Выберите способ оплаты');
+            return;
+        }
 
+        if (!this.addressInput.value.trim()) {
+            this.setText(this.errors, 'Укажите адрес доставки');
+            return;
+        }
+
+        this.events.emit('order:submit', {
+            address: this.addressInput.value,
+            payment: this.selectedPayment
+        });
+    }
 }

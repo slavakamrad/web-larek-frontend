@@ -1,94 +1,76 @@
 import { IContactsFormView, IFormState } from "../../types/views";
-import { contactsTemplate } from "../../utils/templates";
 import { ensureElement } from "../../utils/utils";
 import { IEvents } from "../base/events";
-import { AppModal } from "./Popup";
+import { Component } from "../base/component";
+import { IOrder, PaymentMethod } from "../../types/data";
 
-export class ContactsFormView extends AppModal implements IContactsFormView {
+export class ContactsFormView extends Component<IOrder> implements IContactsFormView {
     emailInput: HTMLInputElement;
     phoneInput: HTMLInputElement;
     submitButton: HTMLButtonElement;
     errors: HTMLElement;
-    private static savedData: { email: string, phone: string } | null = null;
+    private orderData: Partial<IOrder> = {};
 
     constructor(container: HTMLElement, protected events: IEvents) {
-        super(container, events);
-    }
-
-    render(state?: Partial<IFormState>): HTMLElement {
-        const content = contactsTemplate.content.cloneNode(true) as DocumentFragment;
-        this.content.replaceChildren(content);
-
-        this.emailInput = ensureElement<HTMLInputElement>('input[name="email"]', this.content);
-        this.phoneInput = ensureElement<HTMLInputElement>('input[name="phone"]', this.content);
-        this.submitButton = ensureElement<HTMLButtonElement>('button[type="submit"]', this.content);
-        this.errors = ensureElement<HTMLElement>('.form__errors', this.content);
-
-        if (ContactsFormView.savedData) {
-            this.emailInput.value = ContactsFormView.savedData.email;
-            this.phoneInput.value = ContactsFormView.savedData.phone;
-        }
-
-        this.validateForm();
+        super(container);
+        
+        this.emailInput = ensureElement<HTMLInputElement>('input[name="email"]', container);
+        this.phoneInput = ensureElement<HTMLInputElement>('input[name="phone"]', container);
+        this.submitButton = ensureElement<HTMLButtonElement>('button[type="submit"]', container);
+        this.errors = ensureElement<HTMLElement>('.form__errors', container);
 
         this.emailInput.addEventListener('input', () => {
             this.validateForm();
-            this.saveData();
             this.events.emit('contacts:email', { value: this.emailInput.value });
         });
 
         this.phoneInput.addEventListener('input', () => {
             this.validateForm();
-            this.saveData();
             this.events.emit('contacts:phone', { value: this.phoneInput.value });
         });
 
         this.submitButton.addEventListener('click', (e) => {
             e.preventDefault();
-            if (this.validateForm()) {
-                this.events.emit('contacts:submit', {
-
-                    email: this.emailInput.value,
-                    phone: this.phoneInput.value
-
-                });
-                ContactsFormView.savedData = null;
-            }
+            this.submitOrder();
         });
 
-        if (state?.errors) {
-            this.showErrors(state.errors);
-        }
+        this.validateForm();
+    }
 
+    render(data: Partial<IOrder>): HTMLElement {
+    
+        if (data.address && data.payment) {
+            this.orderData = {
+                address: data.address,
+                payment: data.payment as PaymentMethod
+            };
+        }
+        this.validateForm();
         return this.container;
     }
 
-    private validateForm(): boolean {
-        this.errors.innerHTML = '';
-        const errors: string[] = [];
-
-        // Валидация email
-        if (!this.emailInput.value) {
-            errors.push('Необходимо указать email');
-        } else if (!this.validateEmail(this.emailInput.value)) {
-            errors.push('Некорректный email');
+    private validateForm(): void {
+        const hasEmail = this.emailInput.value.trim().length > 0;
+        const hasPhone = this.phoneInput.value.trim().length > 0;
+        
+        let errorMessage = '';
+        
+        if (!hasEmail && !hasPhone) {
+            errorMessage = 'Введите email и телефон';
+        } else if (!hasEmail) {
+            errorMessage = 'Введите email';
+        } else if (!hasPhone) {
+            errorMessage = 'Введите телефон';
+        } else {
+            if (!this.validateEmail(this.emailInput.value)) {
+                errorMessage = 'Некорректный email';
+            } else if (!this.validatePhone(this.phoneInput.value)) {
+                errorMessage = 'Некорректный телефон (11 цифр)';
+            }
         }
-
-        // Валидация телефона
-        if (!this.phoneInput.value) {
-            errors.push('Необходимо указать телефон');
-        } else if (!this.validatePhone(this.phoneInput.value)) {
-            errors.push('Некорректный формат номера телефона');
-        }
-
-        if (errors.length) {
-            this.showErrors(errors);
-            this.submitButton.disabled = true;
-            return false;
-        }
-
-        this.submitButton.disabled = false;
-        return true;
+        
+        this.setText(this.errors, errorMessage);
+        this.submitButton.disabled = !!errorMessage;
     }
 
     private validateEmail(email: string): boolean {
@@ -98,40 +80,46 @@ export class ContactsFormView extends AppModal implements IContactsFormView {
 
     private validatePhone(phone: string): boolean {
         const digits = phone.replace(/\D/g, '');
-        return digits.length === 11 || digits.length === 10;
+        return digits.length === 11;
     }
 
-    private showErrors(errors: string[]): void {
-        this.errors.innerHTML = '';
-        errors.forEach(error => {
-            const errorElement = document.createElement('p');
-            errorElement.className = 'form__error';
-            errorElement.textContent = error;
-            this.errors.appendChild(errorElement);
-        });
-    }
-
-    private saveData(): void {
-        if (this.emailInput && this.phoneInput) {
-            ContactsFormView.savedData = {
-                email: this.emailInput.value,
-                phone: this.phoneInput.value
-            };
-
+    private submitOrder(): void {
+        if (!this.validateEmail(this.emailInput.value)) {
+            this.setText(this.errors, 'Некорректный email');
+            return;
         }
 
+        if (!this.validatePhone(this.phoneInput.value)) {
+            this.setText(this.errors, 'Некорректный телефон (11 цифр)');
+            return;
+        }
+
+        const order: IOrder = {
+            ...this.orderData,
+            email: this.emailInput.value,
+            phone: this.phoneInput.value,
+            items: this.orderData.items || [],
+            total: this.orderData.total || 0
+        } as IOrder;
+
+        if (!order.payment) {
+            this.setText(this.errors, 'Не выбран способ оплаты');
+            return;
+        }
+
+        if (!order.address) {
+            this.setText(this.errors, 'Не указан адрес доставки');
+            return;
+        }
+
+        this.events.emit('order:complete', order);
     }
 
-    close(): void {
-        this.saveData();
-        super.close();
-    }
-
-    getEmail(): string {
+    get email(): string {
         return this.emailInput.value;
     }
 
-    getPhone(): string {
+    get phone(): string {
         return this.phoneInput.value;
     }
 }

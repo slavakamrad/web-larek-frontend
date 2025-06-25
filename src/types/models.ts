@@ -1,5 +1,4 @@
-import { IOrder, IProduct, PaymentMethod } from "./data";
-import { FormErrors } from "./views";
+import { IProduct, PaymentMethod } from "./data";
 
 // Интерфейс модели каталога товаров 
 export interface ICatalogModel {
@@ -12,9 +11,13 @@ export interface ICatalogModel {
 // Интерфейс модели корзины товаров 
 export interface IBasketModel {
   items: Map<string, number>;
-  add(id: string): void;
-  remove(id: string): void;
+  addItem(id: string): void;
+  removeItem(id: string): void;
   getCartValue(cost: number): number;
+  clear(): void;
+  getTotal():number;
+  getItemsIds():string[];
+  hasItem(id: string): boolean;
 }
 
 // Интерфейс модели заказа
@@ -25,7 +28,4 @@ export interface IOrderModel {
   phone: string;               // телефон пользователя
   items: string[];             // массив ID товаров в заказе
   total: number;               // итоговая сумма заказа
-  updateField<K extends keyof IOrder>(field: K, value: IOrder[K]): void;
-  validate(): { isValid: boolean; errors: FormErrors };
-  getOrderData(): IOrder;
 }

@@ -1,53 +1,44 @@
-import { IOrder, IProduct } from '../../types/data';
-import { IBasketView, IFormState, IPopup, ISuccessView } from '../../types/views';
-import { ensureElement } from '../../utils/utils';
-import { Component } from '../base/component';
-import { IEvents } from '../base/events';
+import {Component} from "../base/component"
+import {ensureElement} from "../../utils/utils";
+import {IEvents} from "../base/events";
 
-export interface IPopupData extends IProduct, IBasketView, IOrder, IFormState, ISuccessView {
-	content: HTMLElement;
+interface IModalData {	
+    content: HTMLElement;
 }
 
+export class AppModal extends Component<IModalData> {
+    protected _closeButton: HTMLButtonElement;
+    protected _content: HTMLElement;
 
-export class AppModal extends Component<IPopupData> implements IPopup {
-	_closeButton: HTMLButtonElement;
-	content: HTMLElement;
+    constructor(container: HTMLElement, protected events: IEvents) {
+        super(container);
 
-	constructor(container: HTMLElement, protected events: IEvents) {
-		super(container);
+        this._closeButton = ensureElement<HTMLButtonElement>('.modal__close', container);
+        this._content = ensureElement<HTMLElement>('.modal__content', container);
 
-		this._closeButton = this.container.querySelector('.modal__close');
-		this.content = this.container.querySelector('.modal__content');
+        this._closeButton.addEventListener('click', this.close.bind(this));
+        this.container.addEventListener('click', this.close.bind(this));
+        this._content.addEventListener('click', (event) => event.stopPropagation());
+    }
 
-		this._closeButton?.addEventListener('click', this.close.bind(this));
-		this.container.addEventListener('click', this.close.bind(this));
-		this.content?.addEventListener('click', (evt) => evt.stopPropagation());
-	}
+    set content(value: HTMLElement) {
+        this._content.replaceChildren(value);
+    }
 
-	get closeButton(): HTMLButtonElement {
-		return this._closeButton;
-	}
+    open() {
+        this.container.classList.add('modal_active');
+        this.events.emit('modal:open');
+    }
 
-	open(): void {
-		this.container.classList.add('modal_active');
-		this.events.emit('modal:open', this.container);
-	}
+    close() {
+        this.container.classList.remove('modal_active');
+        this.content = null;
+        this.events.emit('modal:close');
+    }
 
-	close(): void {
-		this.container.classList.remove('modal_active');
-		this.content.innerHTML = '';
-		this.events.emit('modal:close', this.container);
-	}
-
-	handleESC(evt: KeyboardEvent): void {
-		if (evt.key === 'Escape') {
-			this.close();
-		}
-	}
-
-	render(data: IPopupData): HTMLElement {
-		super.render(data);
-		this.open();
-		return this.container;
-	}
+    render(data: IModalData): HTMLElement {
+        super.render(data);
+        this.open();
+        return this.container;
+    }
 }

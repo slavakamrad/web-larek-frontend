@@ -1,39 +1,36 @@
 import { basketTemplate } from '../../utils/templates';
 import { IProduct } from '../../types/data';
 import { IBasketView } from '../../types/views';
-import { ensureElement } from '../../utils/utils';
+import { createElement, ensureElement } from '../../utils/utils';
 import { IEvents } from '../base/events';
-import { AppModal, IPopupData } from './Popup';
+import { Component } from '../base/component';
+ 
 
-export class BasketView extends AppModal implements IBasketView {
+export class BasketView extends Component<IProduct>  implements IBasketView {
 	list: HTMLElement;
 	total: HTMLElement;
 	button: HTMLButtonElement;
 	basketItems: Map<string, { product: IProduct; count: number }>;
 
-	constructor(container: HTMLElement, events: IEvents) {
-		super(container, events);
+	constructor(protected container: HTMLElement, protected events: IEvents) {
+		super(container);
+		this.list = ensureElement('.basket__list', this.container);
+		this.total = ensureElement('.basket__price', this.container);
+		this.button = ensureElement<HTMLButtonElement>('.basket__button', this.container);
 
 	}
-
-	render(data: { basketItems: Map<string, { product: IProduct; count: number }> }): HTMLElement {
-		if (!data) return this.container;
-
-		const content = basketTemplate.content.cloneNode(true) as DocumentFragment;
-		this.content.replaceChildren(content);
-
-		this.list = ensureElement('.basket__list', this.content);
-		this.total = ensureElement('.basket__price', this.content);
-		this.button = ensureElement<HTMLButtonElement>('.basket__button', this.content);
-
-		if (data.basketItems.size === 0) {
-			this.list.innerHTML = 'Корзина пуста';
+	render(data?: Partial<IProduct> & { basketItems?: Map<string, { product: IProduct; count: number }> }): HTMLElement {
+		if (!data?.basketItems || data.basketItems.size === 0) {
+			this.list.replaceChildren(
+				createElement('p', { textContent: 'Корзина пуста' })
+			);
 			this.setDisabled(this.button, true);
 			return this.container;
 		}
 
 		let total = 0;
 		let index = 1;
+		this.list.innerHTML = '';
 
 		data.basketItems.forEach(({ product }, id) => {
 			const item = document.createElement('li');
@@ -59,6 +56,7 @@ export class BasketView extends AppModal implements IBasketView {
 		this.button.addEventListener('click', () => {
 			this.events.emit('order:init');
 		});
+
 
 		return this.container;
 	}

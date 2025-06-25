@@ -1,34 +1,26 @@
+import { IOrder } from "../../types/data";
 import { ISuccessView } from "../../types/views";
 import { successTemplate } from "../../utils/templates";
 import { ensureElement } from "../../utils/utils";
+import { Component } from "../base/component";
 import { IEvents } from "../base/events";
-import { AppModal } from "./Popup";
 
-export class SuccessView extends AppModal implements ISuccessView {
-  total: number;
 
-  constructor(container: HTMLElement, events: IEvents) {
-    super(container, events);
+export class SuccessView extends Component<IOrder> implements ISuccessView {
+    description: HTMLElement;
+    closeButton: HTMLButtonElement;
+    total: number;
 
-  }
-
-  render(data: { total: number }) {
-    const content = successTemplate.content.cloneNode(
-      true
-    ) as DocumentFragment;
-    this.content.replaceChildren(content);
-
-    this.total = data.total
-
-    const closeButton = ensureElement('.order-success__close', this.content);
-
-    this.setText(ensureElement('.order-success__description', this.content), `Списано ${this.total} синапсов`)
-
-    closeButton.addEventListener('click', () => {
-      this.close();
-
-    })
-
-    return this.container;
-  }
+    constructor(container: HTMLElement, protected events: IEvents) {
+        super(container);
+        this.description = ensureElement<HTMLElement>('.order-success__description', container);
+        this.closeButton = ensureElement<HTMLButtonElement>('.order-success__close', container);
+        this.closeButton.addEventListener('click', () => {
+            this.events.emit('success:close');
+        });
+    }
+    render(data: { total: number }): HTMLElement {
+        this.setText(this.description, `Списано ${data.total} синапсов`);
+        return this.container;
+    }
 }

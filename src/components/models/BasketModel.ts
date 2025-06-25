@@ -6,10 +6,10 @@ export class BasketModel {
 
     constructor(protected events: EventEmitter) { }
 
-    get items() {
-        return this._items;
+    get items() { 
+        return this._items; 
     }
-
+    
     addItem(product: IProduct) {
         if (!this._items.has(product.id)) {
             this._items.set(product.id, { product, count: 1 });
@@ -27,14 +27,14 @@ export class BasketModel {
         this.events.emit('basket:changed');
     }
 
-    getTotal() {
+    getTotal(): number {
         return Array.from(this._items.values()).reduce(
             (total, item) => total + item.product.price * item.count,
             0
         );
     }
 
-    getItemsIds() {
+    getItemsIds(): string[] {
         return Array.from(this._items.keys());
     }
 

@@ -20,6 +20,12 @@ export interface IProduct {
   price: number | null;
 }
 
+// Интерфейс корзины
+export interface IBasketData {
+  items: Map<string, { product: IProduct; count: number }>;
+  
+}
+
 // Тип оплаты онлайн или при получении заказа
 export type PaymentMethod = 'cash' | 'card';
 
@@ -31,6 +37,7 @@ export interface IOrder {
   address: string;
   total: number;
   items: string[];
+  errors?: string[];
 }
 
 
