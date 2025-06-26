@@ -206,7 +206,6 @@ interface ICatalogModel {
   getItems(): IProduct[];
   getItem(id: string): IProduct;
 }
-
 interface IBasketModel {
   items: Map<string, number>;
   addItem(id: string): void;
@@ -217,7 +216,6 @@ interface IBasketModel {
   getItemsIds():string[];
   hasItem(id: string): boolean;
 }
-
 interface IOrder {
   payment: PaymentMethod;
   email: string;
@@ -236,33 +234,27 @@ interface IOrder {
 interface IView<T = unknown> {
   render(data?: T): HTMLElement;
 }
-
 interface ICatalogView extends IView<IProduct[]> {
   itemClick(handler: (product: IProduct) => void): void;
   setLoading(loading: boolean): void;
 }
-
 interface IPopup extends IView {
   content: HTMLElement;
   closeButton: HTMLButtonElement;
   open(): void;
   close(): void;
 }
-
 interface IProductPreview {
   button: HTMLButtonElement;
   currentProduct: IProduct;
 }
-
 interface IBasketView {
   basketItems: Map<string, { product: IProduct; count: number }>;
 }
-
 interface IBasketItem {
     product: IProduct;
     index: number;
 }
-
 interface IOrderFormView {
   method: PaymentMethod;
   address: string;
@@ -270,7 +262,6 @@ interface IOrderFormView {
   errors: HTMLElement;
   render(state: IOrder): HTMLElement;
 }
-
 interface IContactsFormView {
   emailInput: HTMLInputElement;
   phoneInput: HTMLInputElement;
@@ -278,7 +269,6 @@ interface IContactsFormView {
   errors: HTMLElement;
   render(state: IFormState): HTMLElement;
 }
-
 interface ISuccessView {
   total: number;
 }
@@ -294,19 +284,16 @@ interface ISuccessView {
 |------------------|---------------------|----------|------------|
 | `items:changed`  | -                   | Обновление списка товаров | `catalogView.render(catalogModel.getItems())` |
 | `catalog:item-click` | `IProduct` | Клик по товару | Открывает превью товара с проверкой наличия в корзине через `basketModel.hasItem()` |
-
 ### Превью товара
 | Событие          | Данные              | Описание | Обработчик |
 |------------------|---------------------|----------|------------|
 | `basket:add`     | `IProduct`          | Добавление в корзину | `basketModel.addItem()`, закрытие модалки через `modal.close()` |
 | `basket:remove`  | `{ id: string, fromPreview?: boolean }` | Удаление из корзины | `basketModel.removeItem()`, при `fromPreview` закрывает модалку через `modal.close()` |
-
 ### Корзина
 | Событие          | Данные              | Описание | Обработчик |
 |------------------|---------------------|----------|------------|
 | `basket:changed` | -                   | Изменение состава корзины | Обновляет счетчик через `page.counter`, перерисовывает корзину через `basketView.render()` |
 | `basket:open`    | -                   | Открытие корзины | Рендер корзины в модальном окне через `modal.render()` |
-
 ### Оформление заказа
 #### Шаг 1 (Оплата и адрес)
 | Событие          | Данные              | Описание | Обработчик |
@@ -315,19 +302,16 @@ interface ISuccessView {
 | `order:change`   | `{ field: keyof IOrder; value: string \| PaymentMethod }` | Изменение полей заказа | Обновляет данные в `orderModel` через `orderModel.setField()` |
 | `order:validate` | `{ valid: boolean; errors: string[] }` | Валидация данных заказа | Обновляет форму заказа через `orderForm.render()` |
 | `order:submit`   | -                   | Подтверждение данных | Проверяет валидность через `orderModel.validateOrderStep()`, при успехе открывает форму контактов |
-
 #### Шаг 2 (Контактные данные)
 | Событие          | Данные              | Описание | Обработчик |
 |------------------|---------------------|----------|------------|
 | `contacts:validate` | `{ valid: boolean; errors: string[] }` | Валидация контактных данных | Обновляет форму контактов через `contactsForm.render()` |
 | `contacts:submit` | -                   | Подтверждение контактов | Формирует полный заказ через `orderModel.getOrder()`, отправляет на сервер через `api.postOrder()` |
-
 ### Успешное оформление
 | Событие          | Данные              | Описание | Обработчик |
 |------------------|---------------------|----------|------------|
 | `order:complete` | -                   | Успешное оформление | Очищает корзину через `basketModel.clear()`, показывает успех через `modal.render()` с `successView` |
 | `success:close`  | -                   | Закрытие окна успеха | Закрывает модальное окно через `modal.close()` |
-
 ### Модальные окна
 | Событие          | Данные              | Описание | Обработчик |
 |------------------|---------------------|----------|------------|

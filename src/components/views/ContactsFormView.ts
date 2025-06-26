@@ -4,34 +4,34 @@ import { IEvents } from '../base/events';
 import { IOrder } from '../../types/data';
 
 export class ContactsFormView extends Component<IOrder> {
-    protected _emailInput: HTMLInputElement;
-    protected _phoneInput: HTMLInputElement;
-    protected _submitButton: HTMLButtonElement;
-    protected _errors: HTMLElement;
+    emailInput: HTMLInputElement;
+    phoneInput: HTMLInputElement;
+    submitButton: HTMLButtonElement;
+    errors: HTMLElement;
 
     constructor(container: HTMLElement, protected events: IEvents) {
         super(container);
         
-        this._emailInput = ensureElement<HTMLInputElement>('input[name="email"]', container);
-        this._phoneInput = ensureElement<HTMLInputElement>('input[name="phone"]', container);
-        this._submitButton = ensureElement<HTMLButtonElement>('button[type="submit"]', container);
-        this._errors = ensureElement<HTMLElement>('.form__errors', container);
+        this.emailInput = ensureElement<HTMLInputElement>('input[name="email"]', container);
+        this.phoneInput = ensureElement<HTMLInputElement>('input[name="phone"]', container);
+        this.submitButton = ensureElement<HTMLButtonElement>('button[type="submit"]', container);
+        this.errors = ensureElement<HTMLElement>('.form__errors', container);
 
-        this._emailInput.addEventListener('input', () => {
+        this.emailInput.addEventListener('input', () => {
             events.emit('order:change', { 
                 field: 'email', 
-                value: this._emailInput.value 
+                value: this.emailInput.value 
             });
         });
 
-        this._phoneInput.addEventListener('input', () => {
+        this.phoneInput.addEventListener('input', () => {
             events.emit('order:change', { 
                 field: 'phone', 
-                value: this._phoneInput.value 
+                value: this.phoneInput.value 
             });
         });
 
-        this._submitButton.addEventListener('click', (e) => {
+        this.submitButton.addEventListener('click', (e) => {
             e.preventDefault();
             events.emit('order:complete');
         });
@@ -39,12 +39,12 @@ export class ContactsFormView extends Component<IOrder> {
 
     render(data?: Partial<IOrder> & { errors?: string[]; valid?: boolean }): HTMLElement {
         if (data?.errors) {
-            this.setText(this._errors, data.errors.join('; '));
+            this.setText(this.errors, data.errors.join('; '));
         } else {
-            this.setText(this._errors, '');
+            this.setText(this.errors, '');
         }
         
-        this.setDisabled(this._submitButton, !data?.valid);
+        this.setDisabled(this.submitButton, !data?.valid);
         return this.container;
     }
 }

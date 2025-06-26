@@ -1,6 +1,5 @@
 import { IOrder } from "../../types/data";
 import { ISuccessView } from "../../types/views";
-import { successTemplate } from "../../utils/templates";
 import { ensureElement } from "../../utils/utils";
 import { Component } from "../base/component";
 import { IEvents } from "../base/events";
