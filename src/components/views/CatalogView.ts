@@ -7,8 +7,8 @@ import { IEvents } from "../base/events";
 
 
 export class CatalogView extends Component<IProduct[]> implements ICatalogView {
-  protected _items: HTMLElement[] = [];
-  protected _products: IProduct[] = []; // Добавляем хранилище продуктов
+  _items: HTMLElement[] = [];
+  products: IProduct[] = []; 
   categoryNames: Record<ProductCategory, string> = {
     "дополнительное": "additional",
     "софт-скил": "soft",
@@ -17,15 +17,13 @@ export class CatalogView extends Component<IProduct[]> implements ICatalogView {
     "другое": "other",
   };
 
-
   constructor(container: HTMLElement, protected events: IEvents) {
     super(container);
     this.itemClick((product) => events.emit('catalog:item-click', product));
   }
 
-  // Сеттер для продуктов
   set items(items: IProduct[]) {
-    this._products = items; // Сохраняем продукты
+    this.products = items; 
     this._items = items.map(item => {
       const element = cardCatalogTemplate.content.cloneNode(true) as DocumentFragment;
       const card = element.querySelector('.card') as HTMLElement;
@@ -45,11 +43,11 @@ export class CatalogView extends Component<IProduct[]> implements ICatalogView {
 
   // Геттер для продуктов
   get items(): IProduct[] {
-    return this._products;
+    return this.products;
   }
 
   render(data?: IProduct[]): HTMLElement {
-    if (data) this.items = data; // Обновляем продукты и DOM
+    if (data) this.items = data; 
     this.container.replaceChildren(...this._items);
     return this.container;
   }
@@ -61,7 +59,7 @@ export class CatalogView extends Component<IProduct[]> implements ICatalogView {
       if (card) {
         const index = this._items.indexOf(card as HTMLElement);
         if (index !== -1) {
-          handler(this.items[index]); // Теперь this.items[index] вернёт продукт
+          handler(this.items[index]); 
         }
       }
     });

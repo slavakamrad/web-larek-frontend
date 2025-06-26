@@ -14,27 +14,24 @@ import { SuccessView } from './components/views/SuccessView';
 import { cloneTemplate, ensureElement } from './utils/utils';
 import { IProduct, IOrder, PaymentMethod } from './types/data';
 import { AppModal } from './components/views/Popup';
-import { basketTemplate, cardPreviewTemplate, contactsTemplate, orderTemplate, successTemplate } from './utils/templates';
+import { basketItemsTemplate, basketTemplate, cardPreviewTemplate, contactsTemplate, orderTemplate, successTemplate } from './utils/templates';
+import { OrderModel } from './components/models/OrderModel';
+import { BasketItem } from './components/views/BasketItems';
 
-// import { AppApiMock } from './components/models/AppApiMock';
-
-// Инициализация основных компонентов
 const events = new EventEmitter();
 const api = new AppApi(CDN_URL, API_URL);
-// const api = new AppApiMock(CDN_URL); 
 const catalogModel = new CatalogModel(events);
 const basketModel = new BasketModel(events);
+const orderModel = new OrderModel(events);
 const modal = new AppModal(ensureElement('#modal-container'), events);
 
-// Создание представлений
 const page = new MainPage(document.body, events);
 const catalogView = new CatalogView(ensureElement<HTMLElement>('.gallery'), events);
 const preview = new ProductPreview(cloneTemplate(cardPreviewTemplate), events);
-const basketView = new BasketView(cloneTemplate(basketTemplate), events); 
+const basketView = new BasketView(cloneTemplate(basketTemplate), events);
 const orderForm = new OrderFormView(cloneTemplate(orderTemplate), events);
 const contactsForm = new ContactsFormView(cloneTemplate(contactsTemplate), events);
 const successView = new SuccessView(cloneTemplate(successTemplate), events);
-
 
 // Загрузка товаров
 api.getProductsList()
@@ -42,8 +39,6 @@ api.getProductsList()
   .catch((err) => console.error(err));
 
 // Обработчики событий
-// events.onAll(({ eventName, data }) => console.log(eventName, data));
-
 // Рендер каталога
 events.on('items:changed', () => {
   catalogView.render(catalogModel.getItems());
@@ -53,15 +48,12 @@ events.on('items:changed', () => {
 events.on('catalog:item-click', (item: IProduct) => {
   const isInBasket = basketModel.hasItem(item.id);
   const container = preview.render(item, isInBasket);
- 
-    modal.render({ content: container });
- });
-
+  modal.render({ content: container });
+});
 
 // Обработчик клика на иконку корзины
 events.on('basket:open', () => {
-  const basket = basketView.render({ basketItems: basketModel.items });
-  modal.render({ content: basket });
+  modal.render({ content: basketView.render() });
 });
 
 // Добавление товара в корзину
@@ -77,49 +69,104 @@ events.on('basket:remove', (data: { id: string; fromPreview?: boolean }) => {
     modal.close();
   }
 });
- 
+
 // мониторим изменения в корзине
 events.on('basket:changed', () => {
   page.counter = basketModel.items.size;
-  basketView.render({ basketItems: basketModel.items });
+  
+  const items = Array.from(basketModel.items.values()).map((item, index) => {
+    const basketItem = new BasketItem(
+      cloneTemplate(basketItemsTemplate),
+      events,
+      item.product.id
+    );
+    return basketItem.render({
+      product: item.product,
+      index: index + 1
+    });
+  });
+
+  basketView.setItems(items);
+  basketView.render({
+    items: Array.from(basketModel.items.keys()),
+    total: basketModel.getTotal(),
+    valid: basketModel.items.size > 0
+  });
 });
 
- 
-
-// Обработчики для оформления заказа
-// выбор оплаты и ввод адреса
+// Оформление заказа
 events.on('order:init', () => {
-   modal.render({ content: orderForm.render() });
+  orderModel.clear();
+  modal.render({ 
+    content: orderForm.render({
+      errors: [], 
+      valid: false 
+    })
+  });
 });
 
-//  если все ок передаем orderData дальше открываем форму окнтактов
-events.on('order:submit', (orderData: { address: string; payment: PaymentMethod }) => {
-  const contactsView = contactsForm.render(orderData)
-  modal.render({content: contactsView})
+// валидируем 1 шаг оформления заказа
+events.on('order:validate', (validation: { valid: boolean; errors: string[] }) => {
+  orderForm.render({
+    errors: validation.errors,
+    valid: validation.valid
+  });
+});
+
+// валидируем 2 шаг оформления заказа
+events.on('contacts:validate', (validation: { valid: boolean; errors: string[] }) => {
+  contactsForm.render({
+    errors: validation.errors,
+    valid: validation.valid
+  });
+});
+
+// Изменение полей заказа
+events.on('order:change', (data: { field: keyof IOrder; value: string | PaymentMethod }) => {
+  orderModel.setField(data.field, data.value);
+});
+
+// если все ок открываем форму окнтактов
+events.on('order:submit', () => {
+  const validation = orderModel.validateOrderStep();
+  
+  if (validation.valid) {
+    modal.render({ 
+      content: contactsForm.render({
+        errors: [], 
+        valid: false 
+      }) 
+    });
+  } else {
+    orderForm.render({
+      errors: validation.errors,
+      valid: false
+    });
+  }
 });
 
 // Полетел заказик
-events.on('order:complete', (orderData: Omit<IOrder, 'items' | 'total'>) => {
+events.on('order:complete', () => {   
   // Создаем полный объект заказа
-  const order: IOrder = {
-    email: orderData.email,
-    phone: orderData.phone,
-    address: orderData.address,
-    payment: orderData.payment,
-    items: basketModel.getItemsIds(),  
-    total: basketModel.getTotal()  
-  };
-
- // в вот и пост запросик
+  const order = orderModel.getOrder();
+  order.items = basketModel.getItemsIds();
+  order.total = basketModel.getTotal();
+  
+  // в вот и пост запросик
   api.postOrder(order)
     .then(() => {
       basketModel.clear();
-      const success = successView.render({ total: order.total });
-      modal.render({content: success})
+      modal.render({ 
+        content: successView.render({ total: order.total }) 
+      });
+      orderModel.clear();
     })
     .catch((err) => {
       console.error('Ошибка оформления заказа:', err);
-      events.emit('order:error', err);
+      contactsForm.render({ 
+        errors: ['Ошибка оформления заказа'], 
+        valid: false 
+      });
     });
 });
 

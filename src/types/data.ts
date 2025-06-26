@@ -38,7 +38,9 @@ export interface IOrder {
   total: number;
   items: string[];
   errors?: string[];
+  valid?: boolean; 
 }
+
 
 
 

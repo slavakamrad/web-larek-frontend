@@ -17,3 +17,5 @@ export const modalElement = ensureElement<HTMLElement>('#modal-container');
 export const successTemplate = ensureElement<HTMLTemplateElement>('#success');
 
 export const orderTemplate = ensureElement<HTMLTemplateElement>('#order');
+
+export const basketItemsTemplate = ensureElement<HTMLTemplateElement>('#card-basket')
