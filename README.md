@@ -117,6 +117,11 @@ src/types/
 - Проверяет наличие товара в корзине
 - Эмитит событие 'basket:changed' при изменении корзины
 
+#### OrderModel (models/OrderModel.ts)
+- Хранит данные о заказе
+- Валиидрует данные заказа
+- Очищает инфо о заказе
+
 ### Представления
 
 #### CatalogView (views/CatalogView.ts)
@@ -129,10 +134,12 @@ src/types/
 - Позволяет добавлять/удалять товары из корзины
 
 #### BasketView (views/BasketView.ts)
-- Отображает содержимое корзины
 - Показывает итоговую сумму
 - Обрабатывает удаление товаров
 - Инициирует оформление заказа
+
+#### BasketItems(view/BasketItems.ts)
+- Отображает содержимое корзины
 
 #### OrderFormView (views/OrderFormView.ts)
 - Форма выбора способа оплаты и адреса доставки
@@ -211,13 +218,15 @@ interface IBasketModel {
   hasItem(id: string): boolean;
 }
 
-export interface IOrderModel {
-  payment: PaymentMethod; 
-  address: string;            
-  email: string;               
-  phone: string;              
-  items: string[];            
-  total: number;              
+interface IOrder {
+  payment: PaymentMethod;
+  email: string;
+  phone: string;
+  address: string;
+  total: number;
+  items: string[];
+  errors?: string[];
+  valid?: boolean; 
 }
 ```
 
@@ -249,6 +258,11 @@ interface IBasketView {
   basketItems: Map<string, { product: IProduct; count: number }>;
 }
 
+interface IBasketItem {
+    product: IProduct;
+    index: number;
+}
+
 interface IOrderFormView {
   method: PaymentMethod;
   address: string;
@@ -270,6 +284,8 @@ interface ISuccessView {
 }
 ```
 
+Вот обновленная таблица событий с учетом предоставленного кода:
+
 ## Система событий
 ## События приложения
 
@@ -277,45 +293,48 @@ interface ISuccessView {
 | Событие          | Данные              | Описание | Обработчик |
 |------------------|---------------------|----------|------------|
 | `items:changed`  | -                   | Обновление списка товаров | `catalogView.render(catalogModel.getItems())` |
-| `catalog:item-click` | `IProduct` | Клик по товару | Открывает превью товара с проверкой наличия в корзине |
+| `catalog:item-click` | `IProduct` | Клик по товару | Открывает превью товара с проверкой наличия в корзине через `basketModel.hasItem()` |
 
 ### Превью товара
 | Событие          | Данные              | Описание | Обработчик |
 |------------------|---------------------|----------|------------|
-| `basket:add`     | `IProduct`          | Добавление в корзину | `basketModel.addItem()`, закрытие модалки |
-| `basket:remove`  | `{ id: string, fromPreview?: boolean }` | Удаление из корзины | `basketModel.removeItem()`, при `fromPreview` закрывает модалку |
-| `basket:check`   | `{ id: string, callback: (isInBasket: boolean) => void }` | Проверка наличия в корзине | Использует `basketModel.hasItem()` |
+| `basket:add`     | `IProduct`          | Добавление в корзину | `basketModel.addItem()`, закрытие модалки через `modal.close()` |
+| `basket:remove`  | `{ id: string, fromPreview?: boolean }` | Удаление из корзины | `basketModel.removeItem()`, при `fromPreview` закрывает модалку через `modal.close()` |
 
 ### Корзина
 | Событие          | Данные              | Описание | Обработчик |
 |------------------|---------------------|----------|------------|
-| `basket:changed` | -                   | Изменение состава корзины | Обновляет счетчик и перерисовывает корзину |
-| `basket:open`    | -                   | Открытие корзины | Рендер корзины в модальном окне |
+| `basket:changed` | -                   | Изменение состава корзины | Обновляет счетчик через `page.counter`, перерисовывает корзину через `basketView.render()` |
+| `basket:open`    | -                   | Открытие корзины | Рендер корзины в модальном окне через `modal.render()` |
 
 ### Оформление заказа
 #### Шаг 1 (Оплата и адрес)
 | Событие          | Данные              | Описание | Обработчик |
 |------------------|---------------------|----------|------------|
-| `order:init`     | -                   | Инициация оформления | Открывает форму заказа в модалке |
-| `order:submit`   | `{ address: string; payment: PaymentMethod }` | Подтверждение данных | Открывает форму контактов |
+| `order:init`     | -                   | Инициация оформления | Очищает `orderModel`, открывает форму заказа в модалке через `modal.render()` |
+| `order:change`   | `{ field: keyof IOrder; value: string \| PaymentMethod }` | Изменение полей заказа | Обновляет данные в `orderModel` через `orderModel.setField()` |
+| `order:validate` | `{ valid: boolean; errors: string[] }` | Валидация данных заказа | Обновляет форму заказа через `orderForm.render()` |
+| `order:submit`   | -                   | Подтверждение данных | Проверяет валидность через `orderModel.validateOrderStep()`, при успехе открывает форму контактов |
 
 #### Шаг 2 (Контактные данные)
 | Событие          | Данные              | Описание | Обработчик |
 |------------------|---------------------|----------|------------|
-| `contacts:submit` | `{ email: string; phone: string }` | Подтверждение контактов | Формирует полный заказ и отправляет на сервер |
+| `contacts:validate` | `{ valid: boolean; errors: string[] }` | Валидация контактных данных | Обновляет форму контактов через `contactsForm.render()` |
+| `contacts:submit` | -                   | Подтверждение контактов | Формирует полный заказ через `orderModel.getOrder()`, отправляет на сервер через `api.postOrder()` |
 
 ### Успешное оформление
 | Событие          | Данные              | Описание | Обработчик |
 |------------------|---------------------|----------|------------|
-| `order:complete` | `IOrder`            | Успешное оформление | Очищает корзину, показывает успех |
-| `order:error`    | `Error`             | Ошибка оформления | Выводит ошибку в консоль |
-| `success:close`  | -                   | Закрытие окна успеха | Закрывает модальное окно |
+| `order:complete` | -                   | Успешное оформление | Очищает корзину через `basketModel.clear()`, показывает успех через `modal.render()` с `successView` |
+| `success:close`  | -                   | Закрытие окна успеха | Закрывает модальное окно через `modal.close()` |
 
 ### Модальные окна
 | Событие          | Данные              | Описание | Обработчик |
 |------------------|---------------------|----------|------------|
-| `modal:open`     | -                   | Открытие модалки | Блокирует страницу |
-| `modal:close`    | -                   | Закрытие модалки | Разблокирует страницу |
+| `modal:open`     | -                   | Открытие модалки | Блокирует страницу через `page.locked = true` |
+| `modal:close`    | -                   | Закрытие модалки | Разблокирует страницу через `page.locked = false` |
 
 ### Примечание:
-Модальные окна управляются через прямые вызовы `.open()` и `.close()` без событий
+1. Событие `basket:check` из исходной таблицы не используется в коде
+2. Событие `order:error` из исходной таблицы обрабатывается через `catch` в `api.postOrder()`
+3. Все модальные окна управляются через события `modal:open` и `modal:close`
