@@ -3,7 +3,6 @@ import { IOrder } from '../../types/data';
 import { IProduct } from '../../types/data';
 import { Api, ApiListResponse } from '../base/api';
 
-
 interface IAppAPI {
 	readonly imageUrl: string;
 

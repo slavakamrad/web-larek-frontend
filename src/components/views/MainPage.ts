@@ -11,7 +11,10 @@ export class MainPage extends Component<{}> {
 		super(container);
 
 		this.basketIcon = ensureElement<HTMLElement>('.header__basket', container);
-		this.basketCounter = ensureElement<HTMLElement>('.header__basket-counter', this.basketIcon);
+		this.basketCounter = ensureElement<HTMLElement>(
+			'.header__basket-counter',
+			this.basketIcon
+		);
 		this.wrapper = ensureElement<HTMLElement>('.page__wrapper');
 
 		this.basketIcon.addEventListener('click', () => {
@@ -25,9 +28,9 @@ export class MainPage extends Component<{}> {
 
 	set locked(value: boolean) {
 		if (value) {
-				this.wrapper.classList.add('page__wrapper_locked');
+			this.wrapper.classList.add('page__wrapper_locked');
 		} else {
-				this.wrapper.classList.remove('page__wrapper_locked');
+			this.wrapper.classList.remove('page__wrapper_locked');
 		}
-}
+	}
 }

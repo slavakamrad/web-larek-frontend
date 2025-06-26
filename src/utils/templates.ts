@@ -1,12 +1,13 @@
-import { ensureElement } from "./utils";
+import { ensureElement } from './utils';
 
 export const cardCatalogTemplate =
-  ensureElement<HTMLTemplateElement>('#card-catalog');
+	ensureElement<HTMLTemplateElement>('#card-catalog');
 
 export const cardPreviewTemplate =
-  ensureElement<HTMLTemplateElement>('#card-preview');
+	ensureElement<HTMLTemplateElement>('#card-preview');
 
-export const cardBasketTemplate = ensureElement<HTMLTemplateElement>('#card-basket');
+export const cardBasketTemplate =
+	ensureElement<HTMLTemplateElement>('#card-basket');
 
 export const basketTemplate = ensureElement<HTMLTemplateElement>('#basket');
 
@@ -18,4 +19,5 @@ export const successTemplate = ensureElement<HTMLTemplateElement>('#success');
 
 export const orderTemplate = ensureElement<HTMLTemplateElement>('#order');
 
-export const basketItemsTemplate = ensureElement<HTMLTemplateElement>('#card-basket')
+export const basketItemsTemplate =
+	ensureElement<HTMLTemplateElement>('#card-basket');
